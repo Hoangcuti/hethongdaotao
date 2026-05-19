@@ -1,0 +1,466 @@
+@{
+    Layout = null;
+    int courseId = ViewBag.CourseId;
+    int examId = ViewBag.ExamId;
+    string courseTitle = ViewBag.CourseTitle ?? "Khoa hoc";
+    string examTitle = ViewBag.ExamTitle ?? "Bai kiem tra";
+}
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@examTitle - Quiz</title>
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <script src="~/js/app.js"></script>
+    <style>
+        :root {
+            --brand: var(--color-primary);
+            --brand-light: var(--color-accent);
+            --brand-dark: var(--color-primary-dark);
+            --bg: var(--color-page);
+            --ink: var(--color-text);
+            --muted: var(--color-text-secondary);
+            --line: var(--border-color);
+            --card-bg: var(--color-surface);
+            --success: var(--color-success);
+            --warning: var(--color-warning);
+            --radius-xl: 24px;
+            --radius-2xl: 32px;
+        }
+
+        * { box-sizing: border-box; font-family: var(--font-text); -webkit-font-smoothing: antialiased; }
+        
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at top right, rgba(0, 102, 204, 0.08), transparent 36%),
+                radial-gradient(circle at bottom left, rgba(41, 151, 255, 0.1), transparent 32%),
+                var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        .shell { padding: 32px; max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; min-height: 100vh; }
+
+        /* Header */
+        .top { 
+            display: flex; justify-content: space-between; align-items: center; gap: 24px; 
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .back { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 700; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; opacity: 0.8; }
+        .back:hover { color: #fff; transform: translateX(-4px); opacity: 1; }
+        .page-title { font-size: 28px; font-weight: 800; margin: 12px 0 4px; letter-spacing: -0.02em; }
+        
+        .timer-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+        .timer-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+        .timer-val { font-size: 32px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--brand-light); }
+
+        /* Main Grid */
+        .grid { display: grid; grid-template-columns: 320px 1fr; gap: 24px; flex: 1; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Sidebar Nav */
+        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        .nav-item {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--color-surface-soft);
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 13px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--muted);
+        }
+        .nav-item:hover { background: var(--color-primary-soft); transform: scale(1.05); border-color: var(--color-primary-outline); }
+        .nav-item.active { background: var(--brand); color: #fff; border-color: var(--brand-light); box-shadow: var(--shadow-xs); transform: scale(1.08); }
+        .nav-item.answered { background: var(--color-success-soft); border-color: rgba(17, 135, 93, 0.32); color: var(--success); }
+        .nav-item.answered.active { background: var(--success); color: #fff; border-color: rgba(17, 135, 93, 0.65); }
+
+        /* Question Area */
+        .question-shell { display: flex; flex-direction: column; gap: 24px; min-height: 500px; transition: opacity 0.3s, transform 0.3s; }
+        .question-shell.fade-out { opacity: 0; transform: translateY(10px); }
+        .question-label { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+        .question-text { font-size: 26px; font-weight: 800; line-height: 1.4; margin: 8px 0 24px; letter-spacing: -0.01em; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .option {
+            padding: 20px 24px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: var(--color-surface-soft);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .option::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0;
+            background: var(--brand); opacity: 0.1; transition: width 0.3s;
+        }
+        .option:hover { background: var(--color-primary-soft); border-color: var(--color-primary-outline); transform: translateX(8px); }
+        .option.selected { border-color: var(--brand-light); background: var(--color-primary-soft); }
+        .option.selected::before { width: 100%; }
+        
+        .opt-circle {
+            width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.3s;
+        }
+        .option.selected .opt-circle { border-color: var(--brand-light); background: var(--brand); box-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+        .option.selected .opt-circle::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+
+        /* Actions */
+        .actions { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 32px; border-top: 1px solid var(--line); }
+        .btn { 
+            border: 0; border-radius: 16px; padding: 14px 28px; font-weight: 800; font-size: 14px; 
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-primary { background: var(--brand); color: #fff; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); }
+        .btn-soft { background: var(--color-surface); color: var(--ink); border: 1px solid var(--line); }
+        .btn-soft:hover { background: var(--color-surface-soft); transform: translateY(-2px); }
+        .btn-warning { background: #f4efe6; color: #7a4700; }
+        .btn-warning:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); }
+
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
+        .stat-box { padding: 16px; border-radius: 18px; border: 1px solid var(--line); background: var(--color-surface-soft); }
+        
+        /* Animations */
+        @@keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .spinner-small { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @@keyframes spin { to { transform: rotate(360deg); } }
+
+        @@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .shell { padding: 16px; } }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <div class="top">
+        <div>
+            <a class="back" href="/Student/Learn/@courseId"><span>←</span> Quay lại bài học</a>
+            <h1 class="page-title">@examTitle</h1>
+            <div style="font-size:13px; color:var(--muted); font-weight:700">@courseTitle</div>
+        </div>
+        <div class="timer-card">
+            <div>
+                <div class="timer-label">Thời gian còn lại</div>
+                <div class="timer-val" id="timer">--:--</div>
+            </div>
+            <div style="width:1px; height:40px; background:var(--line)"></div>
+            <div style="font-size:11px; color:var(--muted); font-weight:600; line-height:1.4; max-width:140px" id="saveHint">Tự động sao lưu<br>sau mỗi 2 câu trả lời.</div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <aside class="card">
+            <div class="question-label">Danh sách câu hỏi</div>
+            <div id="questionNav" class="nav-grid"></div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="question-label" style="font-size:10px">Tổng số</div>
+                    <div style="font-size:20px; font-weight:800; color:#fff" id="statTotal">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="question-label" style="font-size:10px">Đã làm</div>
+                    <div style="font-size:20px; font-weight:800; color:var(--success)" id="statAnswered">0</div>
+                </div>
+            </div>
+            
+            <button class="btn btn-soft" style="width:100%; margin-top:20px; justify-content:center" onclick="manualSave()">💾 Lưu bài nháp</button>
+        </aside>
+
+        <section class="card" style="display:flex; flex-direction:column">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+                <div style="font-size:11px;color:var(--muted);font-weight:700;background:rgba(255,255,255,0.05);border:1px solid var(--line);border-radius:8px;padding:5px 10px;line-height:1.6">
+                    ⌨️ <span style="color:rgba(255,255,255,0.8)">A/B/C/D</span> hoặc <span style="color:rgba(255,255,255,0.8)">1/2/3/4</span> chọn đáp án &nbsp;·&nbsp; <span style="color:rgba(255,255,255,0.8)">← →</span> chuyển câu
+                </div>
+            </div>
+            <div id="questionShell" class="question-shell">
+                <div class="question-label" id="questionLabel">Đang tải...</div>
+                <div class="question-text" id="questionText">Vui lòng đợi trong giây lát...</div>
+                <div id="optionsHost" class="options-grid"></div>
+            </div>
+
+            <div class="actions">
+                <div style="display:flex; gap:12px">
+                    <button class="btn btn-soft" onclick="move(-1)">← Trước</button>
+                    <button class="btn btn-soft" id="btnNext" onclick="move(1)">Tiếp theo →</button>
+                </div>
+                <button class="btn btn-primary" onclick="submitQuiz()">Nộp bài kiểm tra ✓</button>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    const examId = @examId; 
+    let session = null; 
+    let answers = {}; 
+    let currentIndex = 0; 
+    let autoSaveTimer = null; 
+    let heartbeatTimer = null; 
+    let remainingSeconds = 0; 
+    let changeSinceSave = 0;
+
+    async function init() {
+        try {
+            session = await apiFetch(`/api/student/quizzes/${examId}`);
+            if (!session) throw new Error("Không thể tải thông tin bài thi.");
+            
+            remainingSeconds = session.remainingSeconds;
+            currentIndex = session.currentQuestionIndex || 0;
+            
+            // Map existing answers
+            const questions = session.questions || [];
+            questions.forEach(q => {
+                if (q.selectedOptionId) {
+                    answers[q.questionId] = q.selectedOptionId;
+                }
+            });
+
+            render();
+            startTimers();
+        } catch (err) {
+            console.error(err);
+            document.getElementById('questionText').textContent = "Lỗi: " + err.message;
+            showToast(err.message || 'Không thể mở bài thi', 'error');
+        }
+    }
+
+    function render() {
+        const questions = session.questions || [];
+        const shell = document.getElementById('questionShell');
+        
+        // Tự động cuộn lên đầu trang khi chuyển câu hỏi
+        window.scrollTo(0, 0);
+
+        if (!questions.length) {
+            document.getElementById('questionLabel').textContent = "Thông báo";
+            document.getElementById('questionText').textContent = 'Bài thi này hiện chưa có câu hỏi nào được thiết lập.';
+            document.getElementById('optionsHost').innerHTML = '';
+            return;
+        }
+
+        currentIndex = Math.max(0, Math.min(currentIndex, questions.length - 1));
+        const q = questions[currentIndex];
+
+        // Update Nav
+        document.getElementById('questionNav').innerHTML = questions.map((item, idx) => `
+            <div class="nav-item ${idx === currentIndex ? 'active' : ''} ${answers[item.questionId] ? 'answered' : ''}" 
+                 onclick="jump(${idx})">${idx + 1}</div>
+        `).join('');
+
+        // Update Question Content with micro-animation
+        shell.classList.add('fade-out');
+        setTimeout(() => {
+            document.getElementById('questionLabel').textContent = `Câu hỏi ${currentIndex + 1} / ${questions.length}`;
+            document.getElementById('questionText').textContent = q.questionText || 'Không có nội dung câu hỏi.';
+            
+            document.getElementById('optionsHost').innerHTML = q.options.map((o, oi) => {
+                const label = ['A', 'B', 'C', 'D'][oi] || String(oi+1);
+                return `
+                <div class="option ${answers[q.questionId] === o.optionId ? 'selected' : ''}" 
+                     onclick="selectOption(${q.questionId}, ${o.optionId})">
+                    <div class="opt-circle" style="width:28px;height:28px;font-size:11px;font-weight:800;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,0.15);">${label}</div>
+                    <div style="font-weight:700">${escapeHtml(o.optionText || '')}</div>
+                    <div style="margin-left:auto;font-size:10px;font-weight:800;opacity:0.3;flex-shrink:0">${label}</div>
+                </div>`;
+            }).join('');
+            
+            shell.classList.remove('fade-out');
+        }, 150);
+
+        // Stats
+        document.getElementById('statTotal').textContent = questions.length;
+        document.getElementById('statAnswered').textContent = Object.keys(answers).length;
+        
+        // Next/Finish button label logic
+        const nextBtn = document.getElementById('btnNext');
+        if (currentIndex === questions.length - 1) {
+            nextBtn.style.opacity = '0.5';
+            nextBtn.disabled = true;
+        } else {
+            nextBtn.style.opacity = '1';
+            nextBtn.disabled = false;
+        }
+
+        renderTimer();
+    }
+
+    function renderTimer() {
+        const min = String(Math.floor(remainingSeconds / 60)).padStart(2, '0');
+        const sec = String(remainingSeconds % 60).padStart(2, '0');
+        const el = document.getElementById('timer');
+        el.textContent = `${min}:${sec}`;
+        if (remainingSeconds < 300) el.style.color = 'var(--warning)';
+        if (remainingSeconds < 60) el.style.color = '#ef4444';
+    }
+
+    function selectOption(questionId, optionId) {
+        answers[questionId] = optionId;
+        render(); // Re-render to show selection immediately
+        saveState(null, false); // Auto-save on every click quietly
+    }
+
+    // ============ KEYBOARD SHORTCUTS ============
+    document.addEventListener('keydown', (e) => {
+        // Bỏ qua nếu đang focus vào input/textarea
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        const questions = session?.questions || [];
+        const q = questions[currentIndex];
+        if (!q) return;
+
+        // ← → để chuyển câu
+        if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); move(1); return; }
+
+        // A/B/C/D hoặc 1/2/3/4 để chọn đáp án
+        const keyMap = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
+        const lk = e.key.toLowerCase();
+        if (lk in keyMap) {
+            e.preventDefault();
+            const idx = keyMap[lk];
+            if (q.options && q.options[idx]) {
+                const optId = q.options[idx].optionId;
+                // Flash hiệu ứng trên option khi bấm phím
+                const optEls = document.querySelectorAll('.option');
+                if (optEls[idx]) {
+                    optEls[idx].style.transform = 'scale(0.97)';
+                    setTimeout(() => { if (optEls[idx]) optEls[idx].style.transform = ''; }, 150);
+                }
+                selectOption(q.questionId, optId);
+            }
+        }
+    });
+    // ============================================
+
+    // Add listener to save before leaving
+    window.addEventListener('beforeunload', () => saveState(null, false));
+
+    function jump(idx) {
+        if (idx === currentIndex) return;
+        currentIndex = idx;
+        render();
+    }
+
+    function move(offset) {
+        const newIdx = currentIndex + offset;
+        const questions = session.questions || [];
+        if (newIdx >= 0 && newIdx < questions.length) {
+            currentIndex = newIdx;
+            render();
+        }
+    }
+
+    function startTimers() {
+        if (autoSaveTimer) clearInterval(autoSaveTimer);
+        if (heartbeatTimer) clearInterval(heartbeatTimer);
+
+        autoSaveTimer = setInterval(() => saveState(null, false), 5 * 60 * 1000); // 5 min
+        
+        heartbeatTimer = setInterval(() => {
+            if (remainingSeconds > 0) {
+                remainingSeconds--;
+                renderTimer();
+                if (remainingSeconds === 300) showToast('Còn 5 phút để hoàn tất bài thi!', 'warning');
+            } else {
+                clearInterval(heartbeatTimer);
+                submitQuiz(true);
+            }
+        }, 1000);
+    }
+
+    async function saveState(message, noisy = true) {
+        if (!session?.userExamId) return;
+        try {
+            const payload = {
+                userExamId: session.userExamId,
+                currentQuestionIndex: currentIndex,
+                remainingSeconds,
+                answers
+            };
+            const res = await apiFetch('/api/student/save-quiz-state', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            changeSinceSave = 0;
+            document.getElementById('saveHint').innerHTML = `Đã lưu thành công<br>lúc ${new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'})}`;
+            if (noisy) showToast(message || 'Đã lưu tiến độ.', 'success');
+        } catch (e) {
+            console.error("Save state error:", e);
+        }
+    }
+
+    function manualSave() {
+        saveState('Đã lưu bài làm tạm thời thành công!');
+    }
+
+    async function submitQuiz(isAuto = false) {
+        if (!session?.userExamId) return;
+        if (!isAuto && !confirm('Xác nhận nộp bài? Bạn không thể chỉnh sửa sau khi nộp.')) return;
+        
+        try {
+            const res = await apiFetch('/api/student/submit-quiz', {
+                method: 'POST',
+                body: JSON.stringify({
+                    userExamId: session.userExamId,
+                    currentQuestionIndex: currentIndex,
+                    remainingSeconds,
+                    answers
+                })
+            });
+            
+            if (autoSaveTimer) clearInterval(autoSaveTimer);
+            if (heartbeatTimer) clearInterval(heartbeatTimer);
+            
+            showToast(isAuto ? 'Hết giờ! Hệ thống đã tự động nộp bài.' : 'Nộp bài thành công!', 'success');
+            setTimeout(() => {
+                window.location.href = `/Student/QuizResult/${res.userExamId}`;
+            }, 1000);
+        } catch (e) {
+            showToast('Lỗi khi nộp bài: ' + e.message, 'error');
+        }
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeTheme();
+        init();
+    });
+</script>
+</body>
+</html>
+

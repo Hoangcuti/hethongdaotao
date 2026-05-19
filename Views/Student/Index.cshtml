@@ -1,0 +1,766 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Học viên - LMS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <script src="~/js/app.js"></script>
+    <style>
+        html, body { font-family: 'Manrope', sans-serif; }
+        .student-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; overflow-x: hidden; position: relative; }
+        .hero-strip { background: linear-gradient(90deg, rgba(255,255,255,.9), rgba(214,240,255,.85)); border-bottom: 1px solid var(--border); padding: 18px 28px; display: flex; justify-content: space-between; gap: 16px; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .hero-date { color: var(--text-secondary); font-size: 13px; font-weight: 600; text-align: right; }
+        .student-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+        .course-grid, .event-grid, .survey-grid, .notif-grid, .badge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .course-card, .event-card, .survey-card, .notif-card, .badge-card, .schedule-item, .rank-item, .info-item { border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,.9); padding: 16px; }
+        .course-card h3, .event-card h3, .survey-card h3, .notif-card h3, .badge-card h3 { font-size: 16px; margin-bottom: 8px; }
+        .meta-line { color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
+        .schedule-list, .rank-list, .info-list, .timeline-mini { display: grid; gap: 12px; }
+        .schedule-item { display: grid; grid-template-columns: 110px 1fr; gap: 14px; }
+        .schedule-day { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
+        .calendar-shell { border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,.96); overflow: hidden; }
+        .calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+        .calendar-nav, .calendar-views { display:flex; gap:12px; align-items:center; }
+        .calendar-btn { border:none; border-radius:12px; background:#24364d; color:#fff; font:inherit; font-weight:700; padding:12px 16px; cursor:pointer; }
+        .calendar-btn.secondary { background:#64748b; }
+        .calendar-btn.ghost { background:#e2e8f0; color:#0f172a; }
+        .calendar-title { font-size:24px; font-weight:800; color:#0f172a; }
+        .calendar-grid { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); }
+        .calendar-head { padding:12px 8px; text-align:center; font-size:13px; font-weight:800; color:#0f172a; border-bottom:1px solid var(--border); }
+        .calendar-cell { min-height:120px; border-right:1px solid rgba(15,23,42,.08); border-bottom:1px solid rgba(15,23,42,.08); padding:10px; position:relative; background:#fff; }
+        .calendar-cell:nth-child(7n) { border-right:none; }
+        .calendar-cell.muted { background:#f8fafc; color:#94a3b8; }
+        .calendar-cell.today { background:#fff9db; }
+        .calendar-day-number { font-size:14px; font-weight:800; margin-bottom:8px; display:flex; justify-content:flex-end; }
+        .calendar-event { font-size:11px; line-height:1.35; padding:6px 8px; border-radius:10px; margin-bottom:6px; background:#dbeafe; color:#1d4ed8; font-weight:700; }
+        .calendar-event.exam { background:#fee2e2; color:#b91c1c; }
+        .calendar-event.more { background:#e2e8f0; color:#334155; }
+        .timeline-mini-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid rgba(15,23,42,.06); }
+        .timeline-mini-item:last-child { border-bottom: none; }
+        .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); margin-top: 6px; flex-shrink: 0; }
+        .field, .textarea { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; font: inherit; background: #fff; }
+        .textarea { min-height: 130px; resize: vertical; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .wide { grid-column: 1 / -1; }
+        .stars { display: flex; gap: 8px; font-size: 24px; }
+        .star { cursor: pointer; opacity: .35; }
+        .star.active { opacity: 1; }
+        .modal-card { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; }
+        .student-hero-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        @@media (max-width: 1100px) { .student-grid { grid-template-columns: 1fr; } }
+        @@media (max-width: 760px) { .form-grid, .schedule-item { grid-template-columns: 1fr; } .hero-strip { padding: 16px 18px; } .content-area { padding: 18px; } }
+    </style>
+</head>
+<body data-role="Student">
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="setSidebarOpen(false)"></div>
+    <div class="dashboard-shell">
+        <aside class="sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-brand-stack">
+                <a class="sidebar-logo" href="/Student/Index">
+                    <div class="sidebar-logo-icon">LMS</div>
+                    <div class="sidebar-logo-text">
+                        <span class="brand-name">Corporate LMS</span>
+                        <span class="brand-sub">Học viên</span>
+                    </div>
+                </a>
+            <div class="sidebar-user sidebar-user-merged">
+                <div class="sidebar-avatar" id="sidebarAvatar">HV</div>
+                <div class="sidebar-user-info">
+                    <div class="user-name" id="sidebarName">Đang tải...</div>
+                    <div class="user-role" id="sidebarRole">Học viên</div>
+                </div>
+            </div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Tổng quan</div>
+                <div class="nav-item"><a class="nav-link active" href="#" data-page="dashboard"><span class="nav-icon">🏠</span><span>Dashboard</span></a></div>
+                <div class="nav-section-label">Học tập</div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="courses"><span class="nav-icon">📚</span><span>Chương trình đào tạo</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="my-courses"><span class="nav-icon">▶️</span><span>Khóa đang học</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="learning-paths"><span class="nav-icon">🗺️</span><span>Lộ trình học</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="study-schedule"><span class="nav-icon">🗓️</span><span>Lịch học tập</span></a></div>
+                <div class="nav-section-label">Kết quả & đánh giá</div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="exam-history"><span class="nav-icon">📝</span><span>Lịch sử thi</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="certificates"><span class="nav-icon">🏅</span><span>Chứng chỉ</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="achievements"><span class="nav-icon">⭐</span><span>Thành tích</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="surveys"><span class="nav-icon">📋</span><span>Khảo sát</span></a></div>
+                <div class="nav-section-label">Tài khoản</div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="notifications"><span class="nav-icon">🔔</span><span>Thông báo</span><span class="nav-badge" id="notifBadge">0</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="#" data-page="profile"><span class="nav-icon">👤</span><span>Hồ sơ cá nhân</span></a></div>
+                <div class="nav-item"><a class="nav-link" href="/Auth/Logout"><span class="nav-icon">🚪</span><span>Đăng xuất</span></a></div>
+            </nav>
+        </aside>
+        <div class="student-main">
+            <header class="hero-strip">
+                <div>
+                    <div class="page-title" id="pageTitle">Dashboard</div>
+                    <div class="page-subtitle" id="pageSubtitle">Tổng quan tiến độ học tập, lịch học và thông báo cá nhân.</div>
+                </div>
+                <div class="student-hero-actions">
+                    <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" onclick="setSidebarOpen(true)">☰</button>
+                    <button type="button" class="btn btn-secondary btn-sm mobile-only" id="themeToggleBtn" onclick="toggleTheme()"><span class="btn-icon-mark">☀</span><span>Light</span></button>
+                    <div class="hero-date" id="todayLabel"></div>
+                </div>
+            </header>
+            <main class="content-area">
+                <section class="page-section" id="dashboard">
+                    <div class="stats-grid" id="dashboardStats"></div>
+                    <div class="student-grid">
+                        <div class="card"><div class="card-header"><div><div class="card-title">Khóa học gần đây</div><div class="card-subtitle">Các khóa đang học hoặc vừa ghi danh.</div></div></div><div class="card-body" id="recentCoursesWrap"></div></div>
+                        <div class="card"><div class="card-header"><div><div class="card-title">Thông báo mới</div><div class="card-subtitle">Những cập nhật gần nhất dành cho bạn.</div></div></div><div class="card-body" id="dashboardNotifications"></div></div>
+                    </div>
+                    <div class="student-grid" style="margin-top:18px">
+                        <div class="card"><div class="card-header"><div><div class="card-title">Lịch học sắp tới</div><div class="card-subtitle">Lịch offline và lịch thi.</div></div></div><div class="card-body" id="dashboardSchedule"></div></div>
+                        <div class="card"><div class="card-header"><div><div class="card-title">Hồ sơ nhanh</div><div class="card-subtitle">Thông tin cá nhân hiện tại.</div></div></div><div class="card-body info-list" id="profileQuickInfo"></div></div>
+                    </div>
+                </section>
+                <section class="page-section" id="courses" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Chương trình đào tạo</div><div class="card-subtitle">Danh sách khóa học có thể tham gia.</div></div></div><div class="card-body"><div class="course-grid" id="coursesList"></div></div></div></section>
+                <section class="page-section" id="my-courses" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Khóa đang học</div><div class="card-subtitle">Tiếp tục học và theo dõi tiến độ.</div></div></div><div class="card-body"><div class="course-grid" id="myCoursesList"></div></div></div></section>
+                <section class="page-section" id="learning-paths" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Lộ trình học</div><div class="card-subtitle">Theo dõi tiến độ theo từng lộ trình.</div></div></div><div class="card-body"><div class="course-grid" id="learningPathsList"></div></div></div></section>
+                <section class="page-section" id="offline-events" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Đào tạo offline</div><div class="card-subtitle">Đăng ký các buổi học trực tiếp.</div></div></div><div class="card-body"><div class="event-grid" id="offlineEventsList"></div></div></div></section>
+                <section class="page-section" id="study-schedule" style="display:none">
+                    <div class="card" style="margin-bottom:18px">
+                        <div class="card-header"><div><div class="card-title">📅 Lịch học Offline</div><div class="card-subtitle">Các buổi học trực tiếp tại trung tâm hoặc phòng họp.</div></div></div>
+                        <div class="card-body">
+                            <div class="schedule-list" id="offlineScheduleList"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><div><div class="card-title">📝 Lịch kiểm tra & Quiz</div><div class="card-subtitle">Thời gian diễn ra các bài đánh giá năng lực.</div></div></div>
+                        <div class="card-body">
+                            <div class="schedule-list" id="quizScheduleList"></div>
+                        </div>
+                    </div>
+                </section>
+                <section class="page-section" id="exam-history" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Lịch sử thi</div><div class="card-subtitle">Kết quả các bài kiểm tra đã thực hiện.</div></div></div><div class="card-body"><div class="table-wrapper"><table class="lms-table"><thead><tr><th>Bài kiểm tra</th><th>Khóa học</th><th>Kết quả (%)</th><th>Trạng thái</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody id="examHistoryBody"></tbody></table></div></div></div></section>
+                <section class="page-section" id="certificates" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Chứng chỉ</div><div class="card-subtitle">Danh sách chứng chỉ đã nhận.</div></div></div><div class="card-body"><div class="course-grid" id="certificatesList"></div></div></div></section>
+                <section class="page-section" id="achievements" style="display:none"><div class="student-grid"><div class="card"><div class="card-header"><div><div class="card-title">Huy hiệu & điểm thưởng</div><div class="card-subtitle">Các mốc thành tích cá nhân.</div></div></div><div class="card-body"><div class="stats-grid" id="achievementStats"></div><div class="badge-grid" id="badgesList"></div></div></div><div class="card"><div class="card-header"><div><div class="card-title">Bảng xếp hạng</div><div class="card-subtitle">Top điểm số hiện tại.</div></div></div><div class="card-body rank-list" id="leaderboardList"></div></div></div></section>
+                <section class="page-section" id="surveys" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Khảo sát</div><div class="card-subtitle">Hoàn thành khảo sát còn hiệu lực.</div></div></div><div class="card-body"><div class="survey-grid" id="surveysList"></div></div></div></section>
+                <section class="page-section" id="notifications" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Thông báo</div><div class="card-subtitle">Danh sách thông báo gần đây.</div></div><button class="btn btn-secondary btn-sm" type="button" onclick="markAllNotifRead()">Đánh dấu đã đọc tất cả</button></div><div class="card-body"><div class="notif-grid" id="notificationsList"></div></div></div></section>
+                <section class="page-section" id="profile" style="display:none"><div class="student-grid"><div class="card"><div class="card-header"><div><div class="card-title">Hồ sơ cá nhân</div><div class="card-subtitle">Cập nhật họ tên và email.</div></div></div><div class="card-body"><div class="form-grid"><input class="field" id="profileFullName" placeholder="Họ và tên" /><input class="field" id="profileEmail" placeholder="Email" /><input class="field" id="profileUsername" placeholder="Tên đăng nhập" disabled /><input class="field" id="profileEmployeeCode" placeholder="Mã nhân viên" disabled /><input class="field" id="profileDepartment" placeholder="Phòng ban" disabled /><input class="field" id="profileJobTitle" placeholder="Chức danh" disabled /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="saveProfile()">Lưu hồ sơ</button></div></div></div><div class="card"><div class="card-header"><div><div class="card-title">Đổi mật khẩu</div><div class="card-subtitle">Mật khẩu mới tối thiểu 6 ký tự.</div></div></div><div class="card-body"><div class="form-grid"><input class="field wide" id="oldPassword" type="password" placeholder="Mật khẩu hiện tại" /><input class="field wide" id="newPassword" type="password" placeholder="Mật khẩu mới" /><input class="field wide" id="confirmPassword" type="password" placeholder="Nhập lại mật khẩu mới" /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="changePassword()">Đổi mật khẩu</button></div></div></div></div></section>
+            </main>
+        </div>
+    </div>
+    <div class="modal-backdrop" id="courseDetailModal">
+        <div class="modal-card card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title" id="courseModalTitle">Chi tiết khóa học</div>
+                    <div class="card-subtitle" id="courseModalSub">Thông tin tổng quan</div>
+                </div>
+                <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('courseDetailModal')">×</button>
+            </div>
+            <div class="card-body">
+                <div class="info-list" id="courseDetailWrap"></div>
+                <div class="card-actions">
+                    <button class="btn btn-primary" type="button" id="courseModalAction" style="display:none"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop" id="reviewModal" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);">
+        <div class="modal-card card" style="width: min(1100px, calc(100vw - 32px)); height: calc(100vh - 60px); display: flex; flex-direction: column;">
+            <div class="card-header" style="background: var(--brand); color: #fff; border-radius: 20px 20px 0 0;">
+                <div>
+                    <div class="card-title" id="reviewTitle" style="color: #fff;">Xem lại bài thi</div>
+                    <div class="card-subtitle" id="reviewSub" style="color: rgba(255,255,255,0.8)">Chi tiết các câu trả lời của bạn.</div>
+                </div>
+                <button class="btn btn-icon" type="button" onclick="closeModal('reviewModal')" style="background: rgba(255,255,255,0.2); color: #fff;">×</button>
+            </div>
+            <div class="card-body" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
+                <div id="reviewContent" style="padding: 32px; flex: 1; overflow-y: auto; display: grid; gap: 32px; align-content: start;">
+                    <div style="text-align:center; padding: 40px; color: var(--muted)">Chọn bài thi để xem lại.</div>
+                </div>
+                <div class="card-footer" style="padding: 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; background: #fff; border-radius: 0 0 20px 20px;">
+                    <button class="btn btn-secondary" type="button" onclick="closeModal('reviewModal')" style="padding: 12px 32px;">Đóng giao diện xem lại</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop" id="surveyModal">
+        <div class="modal-card card">
+            <div class="card-header">
+                <div>
+                    <div class="card-title" id="surveyModalTitle">Khảo sát</div>
+                    <div class="card-subtitle">Đánh giá nhanh trải nghiệm học tập của bạn.</div>
+                </div>
+                <button class="btn btn-secondary btn-icon" type="button" onclick="closeModal('surveyModal')">×</button>
+            </div>
+            <div class="card-body">
+                <div class="stars" id="surveyStars"></div>
+                <textarea class="textarea" id="surveyAnswer" placeholder="Nhập phản hồi của bạn..."></textarea>
+                <div class="card-actions">
+                    <button class="btn btn-primary" type="button" onclick="submitSurvey()">Gửi khảo sát</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const pageConfig = {
+            dashboard: { title: 'Dashboard', subtitle: 'Tổng quan tiến độ học tập, lịch học và thông báo cá nhân.' },
+            courses: { title: 'Chương trình đào tạo', subtitle: 'Danh sách khóa học bạn có thể tham gia.' },
+            'my-courses': { title: 'Khóa đang học', subtitle: 'Tiếp tục học và theo dõi tiến độ hiện tại.' },
+            'learning-paths': { title: 'Lộ trình học', subtitle: 'Các lộ trình học được phân bổ cho bạn.' },
+            'offline-events': { title: 'Đào tạo offline', subtitle: 'Đăng ký và theo dõi các buổi học trực tiếp.' },
+            'study-schedule': { title: 'Lịch học tập', subtitle: 'Lịch offline, lịch thi và hoạt động gần nhất.' },
+            'exam-history': { title: 'Lịch sử thi', subtitle: 'Toàn bộ kết quả kiểm tra đã thực hiện.' },
+            certificates: { title: 'Chứng chỉ', subtitle: 'Các chứng chỉ đã được cấp cho bạn.' },
+            achievements: { title: 'Thành tích', subtitle: 'Điểm thưởng, huy hiệu và bảng xếp hạng.' },
+            surveys: { title: 'Khảo sát', subtitle: 'Các khảo sát đang mở để bạn phản hồi.' },
+            notifications: { title: 'Thông báo', subtitle: 'Theo dõi cập nhật mới nhất từ hệ thống.' },
+            profile: { title: 'Hồ sơ cá nhân', subtitle: 'Quản lý thông tin cá nhân và mật khẩu.' }
+        };
+
+        const state = { notifications: [], offlineEvents: [], examHistory: [], selectedSurveyId: null, selectedSurveyRating: 5, scheduleItems: [], scheduleMonth: new Date() };
+
+        function renderEmpty(message) {
+            return `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">Chưa có dữ liệu</div><div class="empty-desc">${escapeHtml(message)}</div></div>`;
+        }
+
+        function statCard(icon, color, value, label) {
+            return `<div class="stat-card ${color}"><div class="stat-icon ${color}">${icon}</div><div class="stat-value">${fmtNumber(value || 0)}</div><div class="stat-label">${escapeHtml(label)}</div></div>`;
+        }
+
+        function setHeader(pageId) {
+            const cfg = pageConfig[pageId] || pageConfig.dashboard;
+            document.getElementById('pageTitle').textContent = cfg.title;
+            document.getElementById('pageSubtitle').textContent = cfg.subtitle;
+        }
+
+        async function initStudentDashboard() {
+            document.getElementById('todayLabel').textContent = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+            document.querySelectorAll('.nav-link[data-page]').forEach(link => {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const pageId = link.dataset.page;
+                    
+                    // Cuộn lên đầu trang khi chuyển mục
+                    const mainContainer = document.querySelector('.student-main');
+                    if (mainContainer) mainContainer.scrollTop = 0;
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+
+                    setActivePage(pageId);
+                    setHeader(pageId);
+                    await loadPage(pageId);
+                });
+            });
+
+            await loadProfileSummary();
+            await loadDashboard();
+            await loadNotifications(true);
+            await loadStudySchedule();
+        }
+
+        async function loadPage(pageId) {
+            if (pageId === 'courses') return loadCourses();
+            if (pageId === 'my-courses') return loadMyCourses();
+            if (pageId === 'learning-paths') return loadLearningPaths();
+            if (pageId === 'offline-events') return loadOfflineEvents();
+            if (pageId === 'study-schedule') return loadStudySchedule();
+            if (pageId === 'exam-history') return loadExamHistory();
+            if (pageId === 'certificates') return loadCertificates();
+            if (pageId === 'achievements') return loadAchievements();
+            if (pageId === 'surveys') return loadSurveys();
+            if (pageId === 'notifications') return loadNotifications();
+            if (pageId === 'profile') return loadProfile();
+            return loadDashboard();
+        }
+
+        async function loadProfileSummary() {
+            const data = await apiFetch('/api/student/profile');
+            document.getElementById('sidebarName').textContent = data.fullName || 'Hoc vien';
+            document.getElementById('sidebarRole').textContent = data.department || 'Hoc vien';
+            document.getElementById('sidebarAvatar').textContent = getInitials(data.fullName || 'HV');
+            document.getElementById('profileQuickInfo').innerHTML = `
+                <div class="info-item"><div class="meta-line">Họ và tên</div><div><strong>${escapeHtml(data.fullName || '--')}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Email</div><div><strong>${escapeHtml(data.email || '--')}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Phòng ban</div><div><strong>${escapeHtml(data.department || '--')}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Chức danh</div><div><strong>${escapeHtml(data.jobTitle || '--')}</strong></div></div>`;
+        }
+
+        async function loadDashboard() {
+            const [dashboard, notifications] = await Promise.all([
+                apiFetch('/api/student/dashboard'),
+                apiFetch('/api/student/notifications')
+            ]);
+
+            document.getElementById('dashboardStats').innerHTML = [
+                statCard('📘', 'blue', dashboard.totalEnrolled, 'Khóa đã ghi danh'),
+                statCard('⏳', 'cyan', dashboard.inProgress, 'Đang học'),
+                statCard('✅', 'green', dashboard.completed, 'Hoàn thành'),
+                statCard('🏅', 'orange', dashboard.certificates, 'Chứng chỉ'),
+                statCard('⭐', 'purple', dashboard.totalPoints, 'Điểm thưởng'),
+                statCard('🎖️', 'red', dashboard.badges, 'Huy hiệu')
+            ].join('');
+
+            document.getElementById('recentCoursesWrap').innerHTML = (dashboard.recentCourses?.length ?? 0)
+                ? dashboard.recentCourses.map(c => `
+                    <div class="course-card">
+                        <h3>${escapeHtml(c.title || 'Khóa học')}</h3>
+                        <div class="meta-line">${statusBadge(c.status || 'NotStarted')}</div>
+                        <div class="meta-line">Ngày ghi danh: ${fmtDate(c.enrollDate)}</div>
+                        <div style="margin-top:12px">${progressBar(c.progress || 0)}</div>
+                        <div class="card-actions"><a class="btn btn-primary btn-sm" href="/Student/Learn/${c.courseId}">Tiếp tục học</a></div>
+                    </div>`).join('')
+                : renderEmpty('Bạn chưa có khóa học nào được ghi danh.');
+
+            document.getElementById('dashboardNotifications').innerHTML = (notifications.notifications?.length ?? 0)
+                ? `<div class="timeline-mini">${notifications.notifications.slice(0, 5).map(n => `
+                    <div class="timeline-mini-item">
+                        <div class="timeline-dot"></div>
+                        <div><div style="font-weight:700">${escapeHtml(n.title || 'Thông báo')}</div><div class="meta-line">${n.isRead ? 'Đã đọc' : 'Chưa đọc'}</div></div>
+                    </div>`).join('')}</div>`
+                : renderEmpty('Hiện chưa có thông báo mới.');
+        }
+
+        async function loadCourses() {
+            const courses = await apiFetch('/api/student/courses');
+            document.getElementById('coursesList').innerHTML = courses.length ? courses.map(c => renderCourseCard(c)).join('') : renderEmpty('Chưa có khóa học phù hợp.');
+        }
+
+        async function loadMyCourses() {
+            const courses = await apiFetch('/api/student/courses');
+            const enrolled = courses.filter(c => c.enrolled);
+            document.getElementById('myCoursesList').innerHTML = enrolled.length ? enrolled.map(c => renderCourseCard(c)).join('') : renderEmpty('Bạn chưa ghi danh khóa học nào.');
+        }
+
+        function renderCourseCard(course) {
+            return `
+                <div class="course-card">
+                    <h3>${escapeHtml(course.title || 'Khóa học')}</h3>
+                    <div class="meta-line">Danh mục: ${escapeHtml(course.category || 'Chưa phân loại')}</div>
+                    <div class="meta-line">Quiz: ${fmtNumber(course.quizCount || 0)} | ${course.isMandatory ? 'Bắt buộc' : 'Tự chọn'}</div>
+                    <div style="margin-top:12px">${progressBar(course.progress || 0)}</div>
+                    <div class="card-actions">
+                        <button class="btn btn-secondary btn-sm" type="button" onclick="openCourseDetail(${course.courseId})">Xem chi tiết</button>
+                        ${course.enrolled ? `<a class="btn btn-primary btn-sm" href="/Student/Learn/${course.courseId}">Vào học</a>` : `<button class="btn btn-primary btn-sm" type="button" onclick="confirmEnroll(${course.courseId})">Ghi danh</button>`}
+                    </div>
+                </div>`;
+        }
+
+        async function openCourseDetail(courseId) {
+            const data = await apiFetch(`/api/student/courses/${courseId}`);
+            document.getElementById('courseModalTitle').textContent = data.title || 'Chi tiết khóa học';
+            document.getElementById('courseModalSub').textContent = `Danh mục: ${data.category || 'Chung'}`;
+            document.getElementById('courseDetailWrap').innerHTML = `
+                <div class="info-item"><div class="meta-line">Mô tả</div><div><strong>${escapeHtml(data.description || 'Chưa có mô tả')}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Số chương</div><div><strong>${fmtNumber(data.totalModules || 0)}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Số bài học</div><div><strong>${fmtNumber(data.totalLessons || 0)}</strong></div></div>
+                <div class="info-item"><div class="meta-line">Số bài kiểm tra</div><div><strong>${fmtNumber(data.totalQuizzes || 0)}</strong></div></div>`;
+            const action = document.getElementById('courseModalAction');
+            action.style.display = '';
+            action.textContent = data.enrolled ? 'Vào học ngay' : 'Ghi danh khóa học';
+            action.onclick = () => data.enrolled ? window.location.href = `/Student/Learn/${data.courseId}` : confirmEnroll(data.courseId, true);
+            openModal('courseDetailModal');
+        }
+
+        async function confirmEnroll(courseId, closeAfter) {
+            await apiFetch('/api/student/enroll', { method: 'POST', body: JSON.stringify(courseId) });
+            if (closeAfter) closeModal('courseDetailModal');
+            showToast('Ghi danh khóa học thành công.');
+            await loadCourses();
+            await loadMyCourses();
+            await loadDashboard();
+        }
+
+        async function loadLearningPaths() {
+            const data = await apiFetch('/api/student/learning-paths');
+            document.getElementById('learningPathsList').innerHTML = data.length ? data.map(p => `
+                <div class="course-card">
+                    <h3>${escapeHtml(p.pathName || 'Lộ trình')}</h3>
+                    <div class="meta-line">${escapeHtml(p.description || 'Chưa có mô tả')}</div>
+                    <div class="meta-line">Khóa học: ${fmtNumber(p.totalCourses || 0)}</div>
+                    <div style="margin-top:12px">${progressBar(p.percentComplete || 0)}</div>
+                    <div class="card-actions"><button class="btn btn-primary btn-sm" type="button" onclick="startPath(${p.pathId})">Bắt đầu</button></div>
+                </div>`).join('') : renderEmpty('Bạn chưa có lộ trình học nào.');
+        }
+
+        async function startPath(pathId) {
+            await apiFetch(`/api/student/learning-paths/${pathId}/start`, { method: 'POST' });
+            showToast('Đã bắt đầu lộ trình học.');
+            await loadLearningPaths();
+        }
+
+        async function loadOfflineEvents() {
+            state.offlineEvents = await apiFetch('/api/student/offline-events');
+            document.getElementById('offlineEventsList').innerHTML = state.offlineEvents.length ? state.offlineEvents.map(ev => `
+                <div class="event-card">
+                    <h3>${escapeHtml(ev.courseTitle || 'Đào tạo offline')}</h3>
+                    <div class="meta-line">Địa điểm: ${escapeHtml(ev.location || '--')}</div>
+                    <div class="meta-line">Bắt đầu: ${fmtDateTime(ev.startTime)}</div>
+                    <div class="meta-line">Kết thúc: ${fmtDateTime(ev.endTime)}</div>
+                    <div class="meta-line">Số lượng: ${fmtNumber(ev.currentParticipants || 0)}/${fmtNumber(ev.maxParticipants || 0)}</div>
+                    <div class="card-actions">${ev.isRegistered ? '<span class="badge badge-success">Đã đăng ký</span>' : `<button class="btn btn-primary btn-sm" type="button" onclick="registerEvent(${ev.eventId})">Đăng ký</button>`}</div>
+                </div>`).join('') : renderEmpty('Chưa có sự kiện offline nào được mở.');
+        }
+
+        async function registerEvent(eventId) {
+            await apiFetch(`/api/student/offline-events/${eventId}/register`, { method: 'POST' });
+            showToast('Đăng ký lịch học offline thành công.');
+            await loadOfflineEvents();
+            await loadStudySchedule();
+        }
+
+        async function loadStudySchedule() {
+            try {
+                const [offlineEvents, upcomingQuizzes] = await Promise.all([
+                    apiFetch('/api/student/offline-events'),
+                    apiFetch('/api/student/upcoming-quizzes')
+                ]);
+
+                // Render Offline Events
+                const offlineHtml = offlineEvents.length ? offlineEvents.map(ev => `
+                    <div class="schedule-item">
+                        <div style="text-align:center; padding:10px; background:#f1f5f9; border-radius:12px;">
+                            <div class="schedule-day">${new Date(ev.startTime).toLocaleDateString('vi-VN', { weekday: 'short' })}</div>
+                            <div style="font-size:20px; font-weight:800; color:#1e293b;">${new Date(ev.startTime).getDate()}</div>
+                            <div class="meta-line">Tháng ${new Date(ev.startTime).getMonth() + 1}</div>
+                        </div>
+                        <div style="flex:1">
+                            <div style="display:flex; justify-content:space-between; align-items:start">
+                                <div>
+                                    <div style="font-size:16px; font-weight:800; color:#0f172a">${escapeHtml(ev.courseTitle)}</div>
+                                    <div class="meta-line">📍 ${escapeHtml(ev.location || 'Chưa xác định')}</div>
+                                </div>
+                                <div style="text-align:right">
+                                    <div class="badge badge-blue">${escapeHtml(ev.shift || 'Toàn thời gian')}</div>
+                                    <div style="font-size:12px; font-weight:700; color:var(--primary); margin-top:4px;">${fmtTime(ev.startTime)} - ${fmtTime(ev.endTime)}</div>
+                                </div>
+                            </div>
+                            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); display:flex; justify-content:space-between; align-items:center">
+                                <div style="font-size:12px; color:var(--text-secondary)">👤 Phụ trách: <strong>${escapeHtml(ev.instructor || 'Giảng viên')}</strong></div>
+                                ${ev.isRegistered ? 
+                                    (ev.attendanceStatus === 'Present' ? 
+                                        `<span class="badge badge-success">✅ Đã điểm danh</span>` :
+                                        (isAttendanceTime(ev) ? 
+                                            `<button class="btn btn-primary btn-sm" onclick="studentCheckIn(${ev.eventId})">📍 Điểm danh ngay</button>` : 
+                                            `<span class="badge badge-blue">Đã đăng ký</span>`)) 
+                                    : `<button class="btn btn-soft btn-sm" onclick="registerEvent(${ev.eventId})">📝 Đăng ký tham gia</button>`}
+                            </div>
+                        </div>
+                    </div>`).join('') : renderEmpty('Chưa có lịch học offline nào.');
+                document.getElementById('offlineScheduleList').innerHTML = offlineHtml;
+
+                // Render Quiz Schedule
+                const quizHtml = upcomingQuizzes.length ? upcomingQuizzes.map(q => `
+                    <div class="schedule-item" style="border-left: 4px solid #f59e0b;">
+                        <div style="text-align:center; padding:10px; background:#fff7ed; border-radius:12px;">
+                            <div class="schedule-day" style="color:#f59e0b">${new Date(q.startTime).toLocaleDateString('vi-VN', { weekday: 'short' })}</div>
+                            <div style="font-size:20px; font-weight:800; color:#7c2d12;">${new Date(q.startTime).getDate()}</div>
+                        </div>
+                        <div style="flex:1">
+                            <div style="font-size:16px; font-weight:800; color:#0f172a">${escapeHtml(q.title)}</div>
+                            <div class="meta-line">📚 Khóa học: ${escapeHtml(q.courseTitle)}</div>
+                            <div class="meta-line">⏰ Thời gian làm bài: ${q.durationMinutes} phút</div>
+                            <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center">
+                                <div style="font-size:12px; font-weight:700; color:#d97706;">Sẽ mở lúc: ${fmtDateTime(q.startTime)}</div>
+                                <a class="btn btn-primary btn-sm" href="/Student/Learn/${q.courseId}">Vào chuẩn bị</a>
+                            </div>
+                        </div>
+                    </div>`).join('') : renderEmpty('Chưa có lịch thi nào sắp tới.');
+                document.getElementById('quizScheduleList').innerHTML = quizHtml;
+
+                // Dashboard summary (combine first few items)
+                const dashHtml = [...offlineEvents.slice(0, 2), ...upcomingQuizzes.slice(0, 2)]
+                    .sort((a,b) => new Date(a.startTime) - new Date(b.startTime))
+                    .map(item => `<div style="margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                        <div style="font-weight:700; font-size:14px;">${escapeHtml(item.title || item.courseTitle)}</div>
+                        <div style="font-size:12px; color:var(--text-secondary)">${fmtDateTime(item.startTime)}</div>
+                    </div>`).join('') || renderEmpty('Chưa có lịch học.');
+                document.getElementById('dashboardSchedule').innerHTML = dashHtml;
+
+            } catch (e) { console.error(e); }
+        }
+
+        function isAttendanceTime(ev) {
+            if (!ev.attendanceStartTime || !ev.attendanceEndTime) return false;
+            const now = new Date();
+            return now >= new Date(ev.attendanceStartTime) && now <= new Date(ev.attendanceEndTime);
+        }
+
+        async function studentCheckIn(eventId) {
+            try {
+                await apiFetch(`/api/student/checkin/${eventId}`, { method: 'POST' });
+                showToast('Điểm danh thành công!', 'success');
+                loadStudySchedule();
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        function fmtTime(dateStr) {
+            if (!dateStr) return '--:--';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return '--:--';
+            return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+        }
+
+        function renderStudyScheduleCalendar() {
+            const weekdays = ['CN', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7'];
+            document.getElementById('studyScheduleWeekdays').innerHTML = weekdays.map(day => `<div class="calendar-head">${day}</div>`).join('');
+
+            const current = new Date(state.scheduleMonth.getFullYear(), state.scheduleMonth.getMonth(), 1);
+            const start = new Date(current);
+            start.setDate(1 - start.getDay());
+            const title = current.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+            document.getElementById('studyScheduleTitle').textContent = title.charAt(0).toUpperCase() + title.slice(1);
+
+            const todayKey = new Date().toISOString().slice(0, 10);
+            const itemsByDate = state.scheduleItems.reduce((acc, item) => {
+                const key = new Date(item.date).toISOString().slice(0, 10);
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(item);
+                return acc;
+            }, {});
+
+            const cells = [];
+            for (let i = 0; i < 42; i++) {
+                const cellDate = new Date(start);
+                cellDate.setDate(start.getDate() + i);
+                const key = cellDate.toISOString().slice(0, 10);
+                const events = itemsByDate[key] || [];
+                const isCurrentMonth = cellDate.getMonth() === current.getMonth();
+                const isToday = key === todayKey;
+                const eventHtml = events.slice(0, 2).map(item => `<div class="calendar-event ${/Bài kiểm tra/i.test(item.title) ? 'exam' : ''}">${escapeHtml(item.title)}</div>`).join('')
+                    + (events.length > 2 ? `<div class="calendar-event more">+${events.length - 2} sự kiện</div>` : '');
+                cells.push(`
+                    <div class="calendar-cell ${isCurrentMonth ? '' : 'muted'} ${isToday ? 'today' : ''}">
+                        <div class="calendar-day-number">${cellDate.getDate()}</div>
+                        ${eventHtml}
+                    </div>
+                `);
+            }
+            document.getElementById('studyScheduleCalendar').innerHTML = cells.join('');
+        }
+
+        function moveScheduleMonth(offset) {
+            state.scheduleMonth = new Date(state.scheduleMonth.getFullYear(), state.scheduleMonth.getMonth() + offset, 1);
+            renderStudyScheduleCalendar();
+        }
+
+        function jumpScheduleToday() {
+            state.scheduleMonth = new Date();
+            renderStudyScheduleCalendar();
+        }
+
+        async function loadExamHistory() {
+            state.examHistory = await apiFetch('/api/student/exam-history');
+            document.getElementById('examHistoryBody').innerHTML = state.examHistory.length ? state.examHistory.map(x => {
+                const percent = x.passScore > 0 ? Math.round((x.score / x.passScore) * 100) : 0;
+                // Nếu điểm đỗ là 50 và họ làm đúng hết thì percent có thể là 200% nếu ta tính theo passScore.
+                // Thường ta chia cho MaxScore. Giả sử passScore là điểm cần đạt (50) và tổng điểm các câu là 50.
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(x.examTitle || '--')}</strong></td>
+                    <td>${escapeHtml(x.courseTitle || '--')}</td>
+                    <td><span style="font-weight:800; color:${x.isPassed ? 'var(--success)' : 'var(--brand)'}">${x.score}%</span></td>
+                    <td>${x.isPassed ? '<span class="badge badge-success">Đạt</span>' : '<span class="badge badge-warning">Chưa đạt</span>'}</td>
+                    <td>${fmtDateTime(x.startTime)}</td>
+                    <td><button class="btn btn-soft btn-sm" onclick="reviewQuiz(${x.userExamId})">Xem lại</button></td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:24px">Chưa có dữ liệu lịch sử thi.</td></tr>';
+        }
+
+        async function reviewQuiz(userExamId) {
+            try {
+                const content = document.getElementById('reviewContent');
+                content.innerHTML = '<div style="text-align:center; padding: 60px;"><span class="spinner-small"></span> Đang tải dữ liệu bài thi...</div>';
+                openModal('reviewModal');
+
+                const data = await apiFetch(`/api/student/quiz-results/${userExamId}`);
+                document.getElementById('reviewTitle').textContent = data.examTitle || 'Xem lại bài thi';
+                const passBadge = data.isPassed ? '<span class="badge badge-success">ĐẠT</span>' : '<span class="badge badge-danger">KHÔNG ĐẠT</span>';
+                document.getElementById('reviewSub').innerHTML = `Kết quả: <strong style="color:#fff">${data.score}%</strong> - ${passBadge}`;
+                
+                if (!data.questions || data.questions.length === 0) {
+                    content.innerHTML = `
+                        <div style="text-align:center; padding: 80px;">
+                            <div style="font-size: 64px; margin-bottom: 24px;">📭</div>
+                            <div style="font-size: 20px; font-weight: 800; color: var(--ink)">Không tìm thấy dữ liệu câu hỏi</div>
+                            <div style="color: var(--muted); margin-top: 12px;">Bài thi này có thể đã bị thay đổi cấu trúc hoặc câu hỏi đã bị gỡ bỏ sau khi thi.</div>
+                        </div>`;
+                    return;
+                }
+
+                const html = data.questions.map((q, idx) => {
+                    const isCorrect = q.isCorrect;
+                    return `
+                        <div class="glass-card" style="padding: 28px; border-left: 6px solid ${isCorrect ? '#22c55e' : '#ef4444'}; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="flex: 1;">
+                                    <div style="font-size: 13px; font-weight: 800; color: var(--brand); text-transform: uppercase; margin-bottom: 8px;">CÂU HỎI ${idx + 1}</div>
+                                    <h3 style="font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.5; margin: 0;">${escapeHtml(q.questionText)}</h3>
+                                </div>
+                                <div style="padding: 8px 16px; border-radius: 12px; font-weight: 800; font-size: 12px; border: 1px solid ${isCorrect ? '#22c55e' : '#ef4444'}; color: ${isCorrect ? '#16a34a' : '#dc2626'}; background: ${isCorrect ? '#f0fdf4' : '#fef2f2'};">
+                                    ${isCorrect ? 'CHÍNH XÁC ✓' : 'CHƯA ĐÚNG ✗'}
+                                </div>
+                            </div>
+                            <div style="display: grid; gap: 12px;">
+                                ${q.options.map(o => {
+                                    let border = "1px solid var(--border)";
+                                    let bg = "#fff";
+                                    let icon = "⚪";
+                                    let color = "var(--ink)";
+                                    let tag = "";
+
+                                    if (o.isSelected && o.isCorrect) {
+                                        border = "2px solid #22c55e"; bg = "#f0fdf4"; icon = "✅"; color = "#16a34a"; tag = '<span style="font-size: 11px; font-weight: 800; margin-left: auto;">BẠN ĐÃ CHỌN ĐÚNG</span>';
+                                    } else if (o.isSelected && !o.isCorrect) {
+                                        border = "2px solid #ef4444"; bg = "#fef2f2"; icon = "❌"; color = "#b91c1c"; tag = '<span style="font-size: 11px; font-weight: 800; margin-left: auto;">LỰA CHỌN CỦA BẠN</span>';
+                                    } else if (!o.isSelected && o.isCorrect) {
+                                        border = "2px dashed #22c55e"; bg = "#fff"; icon = "⭐"; color = "#16a34a"; tag = '<span style="font-size: 11px; font-weight: 800; margin-left: auto;">ĐÁP ÁN ĐÚNG</span>';
+                                    }
+
+                                    return `
+                                        <div style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-radius: 14px; transition: all 0.2s; border: ${border}; background: ${bg}; color: ${color};">
+                                            <span style="font-size: 18px;">${icon}</span>
+                                            <span style="font-size: 15px; font-weight: 600;">${escapeHtml(o.optionText)}</span>
+                                            ${tag}
+                                        </div>`;
+                                }).join('')}
+                            </div>
+                        </div>`;
+                }).join('');
+                
+                content.innerHTML = html;
+            } catch (e) {
+                showToast('Không thể tải chi tiết bài thi: ' + e.message, 'error');
+                closeModal('reviewModal');
+            }
+        }
+
+        async function loadCertificates() {
+            const data = await apiFetch('/api/student/certificates');
+            document.getElementById('certificatesList').innerHTML = data.length ? data.map(c => `
+                <div class="course-card">
+                    <h3>${escapeHtml(c.courseName || 'Chứng chỉ')}</h3>
+                    <div class="meta-line">Mã chứng chỉ: ${escapeHtml(c.certCode || '--')}</div>
+                    <div class="meta-line">Ngày cấp: ${fmtDate(c.issueDate)}</div>
+                </div>`).join('') : renderEmpty('Bạn chưa có chứng chỉ nào.');
+        }
+
+        async function loadAchievements() {
+            const data = await apiFetch('/api/student/achievements');
+            document.getElementById('achievementStats').innerHTML = [
+                statCard('⭐', 'purple', data.totalPoints || 0, 'Tổng điểm'),
+                statCard('🎖️', 'orange', data.badges?.length || 0, 'Huy hiệu'),
+                statCard('🏆', 'blue', data.leaderboard?.length || 0, 'Top xếp hạng')
+            ].join('');
+            document.getElementById('badgesList').innerHTML = (data.badges?.length ?? 0) ? data.badges.map(b => `
+                <div class="badge-card">
+                    <h3>${escapeHtml(b.badgeName || 'Huy hiệu')}</h3>
+                    <div class="meta-line">${escapeHtml(b.description || '--')}</div>
+                    <div class="meta-line">Nhận ngày ${fmtDate(b.earnedDate)}</div>
+                </div>`).join('') : renderEmpty('Bạn chưa có huy hiệu nào.');
+            document.getElementById('leaderboardList').innerHTML = (data.leaderboard?.length ?? 0) ? data.leaderboard.map((u, idx) => `
+                <div class="rank-item"><div><strong>#${idx + 1}</strong> ${escapeHtml(u.fullName || 'N/A')}</div><div class="badge badge-blue">${fmtNumber(u.totalPoints || 0)} điểm</div></div>`).join('') : renderEmpty('Chưa có dữ liệu xếp hạng.');
+        }
+
+        async function loadSurveys() {
+            const data = await apiFetch('/api/student/surveys');
+            document.getElementById('surveysList').innerHTML = data.length ? data.map(s => `
+                <div class="survey-card">
+                    <h3>${escapeHtml(s.title || 'Khảo sát')}</h3>
+                    <div class="meta-line">${escapeHtml(s.description || '--')}</div>
+                    <div class="meta-line">Hạn: ${fmtDate(s.expiredDate)}</div>
+                    <div class="card-actions">${s.isCompleted ? '<span class="badge badge-success">Đã hoàn thành</span>' : s.isExpired ? '<span class="badge badge-danger">Đã hết hạn</span>' : `<button class="btn btn-primary btn-sm" type="button" onclick="openSurveyModal(${s.surveyId}, ${JSON.stringify(s.title || '')})">Trả lời khảo sát</button>`}</div>
+                </div>`).join('') : renderEmpty('Hiện chưa có khảo sát nào.');
+        }
+
+        function openSurveyModal(surveyId, title) {
+            state.selectedSurveyId = surveyId;
+            state.selectedSurveyRating = 5;
+            document.getElementById('surveyModalTitle').textContent = title || 'Khảo sát';
+            document.getElementById('surveyAnswer').value = '';
+            document.getElementById('surveyStars').innerHTML = Array.from({ length: 5 }, (_, i) => `<span class="star ${i < 5 ? 'active' : ''}" onclick="setSurveyRating(${i + 1})">★</span>`).join('');
+            openModal('surveyModal');
+        }
+
+        function setSurveyRating(value) {
+            state.selectedSurveyRating = value;
+            document.querySelectorAll('#surveyStars .star').forEach((star, idx) => star.classList.toggle('active', idx < value));
+        }
+
+        async function submitSurvey() {
+            if (!state.selectedSurveyId) return;
+            const answerData = JSON.stringify({ rating: state.selectedSurveyRating, comment: document.getElementById('surveyAnswer').value.trim() });
+            await apiFetch(`/api/student/surveys/${state.selectedSurveyId}/submit`, { method: 'POST', body: JSON.stringify({ answerData }) });
+            closeModal('surveyModal');
+            showToast('Gửi khảo sát thành công.');
+            await loadSurveys();
+        }
+
+        async function loadNotifications(silent) {
+            const data = await apiFetch('/api/student/notifications');
+            state.notifications = data.notifications || [];
+            document.getElementById('notifBadge').textContent = fmtNumber(data.unreadCount || 0);
+            document.getElementById('notificationsList').innerHTML = state.notifications.length ? state.notifications.map(n => `
+                <div class="notif-card">
+                    <h3>${escapeHtml(n.title || 'Thông báo')}</h3>
+                    <div class="meta-line">${n.isRead ? 'Đã đọc' : 'Chưa đọc'}</div>
+                    <div class="card-actions">${n.isRead ? '' : `<button class="btn btn-secondary btn-sm" type="button" onclick="markNotifRead(${n.id})">Đánh dấu đã đọc</button>`}</div>
+                </div>`).join('') : renderEmpty('Bạn chưa có thông báo nào.');
+            if (!silent) showToast('Đã tải danh sách thông báo.', 'info', { duration: 1800 });
+        }
+
+        async function markNotifRead(id) {
+            await apiFetch(`/api/student/notifications/${id}/read`, { method: 'POST' });
+            await loadNotifications(true);
+            await loadDashboard();
+        }
+
+        async function markAllNotifRead() {
+            await apiFetch('/api/student/notifications/read-all', { method: 'POST' });
+            showToast('Đã đánh dấu tất cả thông báo là đã đọc.');
+            await loadNotifications(true);
+            await loadDashboard();
+        }
+
+        async function loadProfile() {
+            const data = await apiFetch('/api/student/profile');
+            document.getElementById('profileFullName').value = data.fullName || '';
+            document.getElementById('profileEmail').value = data.email || '';
+            document.getElementById('profileUsername').value = data.username || '';
+            document.getElementById('profileEmployeeCode').value = data.employeeCode || '';
+            document.getElementById('profileDepartment').value = data.department || '';
+            document.getElementById('profileJobTitle').value = data.jobTitle || '';
+        }
+
+        async function saveProfile() {
+            await apiFetch('/api/student/profile', { method: 'PUT', body: JSON.stringify({ fullName: document.getElementById('profileFullName').value.trim(), email: document.getElementById('profileEmail').value.trim() }) });
+            showToast('Cập nhật hồ sơ thành công.');
+            await loadProfileSummary();
+        }
+
+        async function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (newPassword !== confirmPassword) {
+                showToast('Mật khẩu xác nhận không khớp.', 'warning');
+                return;
+            }
+            await apiFetch('/api/student/change-password', { method: 'POST', body: JSON.stringify({ oldPassword, newPassword }) });
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            showToast('Đổi mật khẩu thành công.');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            initializeShell();
+            initStudentDashboard();
+        });
+    </script>
+</body>
+</html>

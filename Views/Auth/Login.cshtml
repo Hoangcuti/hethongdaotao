@@ -1,0 +1,513 @@
+@{
+    ViewData["Title"] = "Đăng nhập - LMS Corporate";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập - LMS Corporate</title>
+    <meta name="description" content="Hệ thống quản lý đào tạo doanh nghiệp - Đăng nhập" />
+    <link rel="stylesheet" href="~/css/dashboard.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-text);
+            background: var(--color-page);
+            min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Left side: illustration */
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(180deg, #111214 0%, #1b1d22 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            width: 600px; height: 600px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+            top: -200px; right: -200px;
+        }
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            width: 400px; height: 400px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 50%;
+            bottom: -150px; left: -150px;
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            justify-content: center;
+            margin-bottom: 48px;
+        }
+
+        .brand-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .08em;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .brand-text .name { font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+        .brand-text .sub { font-size: 12px; color: rgba(255,255,255,0.6); letter-spacing: 1px; text-transform: uppercase; }
+
+        .hero-number {
+            font-size: 96px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.08);
+            line-height: 1;
+            margin-bottom: 8px;
+            letter-spacing: -4px;
+        }
+
+        .hero-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-desc {
+            font-size: 15px;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.7;
+            max-width: 380px;
+        }
+
+        .roles-preview {
+            display: flex;
+            gap: 12px;
+            margin-top: 40px;
+            justify-content: center;
+        }
+
+        .role-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 30px;
+            margin-top: 48px;
+            justify-content: center;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-item .num { font-size: 26px; font-weight: 800; color: #fff; }
+        .stat-item .lbl { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+        /* Right side: login form */
+        .right-panel {
+            width: 480px;
+            background: var(--color-surface);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 48px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .login-header { margin-bottom: 36px; }
+        .login-header h1 { font-size: 26px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; }
+        .login-header p { font-size: 14px; color: var(--color-text-secondary); margin-top: 6px; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-wrap { position: relative; }
+        .input-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: var(--color-text-muted);
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 14px 13px 42px;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            font-size: 14px;
+            font-family: var(--font-text);
+            color: var(--color-text);
+            background: var(--color-surface);
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--color-primary);
+            background: var(--color-surface);
+            box-shadow: var(--shadow-focus);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px; top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--color-text-muted);
+            background: none;
+            border: none;
+            padding: 0;
+            display: flex; align-items: center;
+        }
+
+        .error-alert {
+            background: var(--color-danger-soft);
+            border: 1px solid rgba(196,60,47,0.2);
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--color-danger);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            border-radius: 9999px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: var(--font-text);
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+            margin-top: 8px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            background: var(--color-primary-hover);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+
+        .login-footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            color: var(--color-text-muted);
+            text-align: center;
+        }
+
+        .loading-btn { opacity: 0.7; pointer-events: none; }
+
+        .demo-login {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .demo-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .demo-grid form {
+            margin: 0;
+        }
+
+        .demo-card {
+            width: 100%;
+            text-align: left;
+            padding: 14px 14px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: var(--color-surface);
+            color: var(--color-text);
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, border-color .2s, background-color .2s;
+        }
+
+        .demo-card:hover {
+            transform: translateY(-1px);
+            border-color: var(--color-primary-outline);
+            background: color-mix(in srgb, var(--color-primary-soft) 26%, var(--color-surface));
+            box-shadow: var(--shadow-sm);
+        }
+
+        .demo-card-role {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            background: var(--color-primary-soft);
+            color: var(--color-primary);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .demo-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .demo-card-meta {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.45;
+        }
+
+        @@media (max-width: 900px) {
+            .left-panel { display: none; }
+            .right-panel { width: 100%; padding: 40px 32px; }
+            .demo-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Panel -->
+    <div class="left-panel">
+        <div class="left-content">
+            <div class="brand-logo">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-text">
+                    <div class="name">Corporate LMS</div>
+                    <div class="sub">Learning Management System</div>
+                </div>
+            </div>
+
+            <div class="hero-number">LMS</div>
+            <div class="hero-title">Nền tảng đào tạo<br/>doanh nghiệp</div>
+            <div class="hero-desc">
+                Quản lý khóa học, theo dõi tiến độ học tập và phát triển kỹ năng cho toàn bộ đội ngũ nhân viên.
+            </div>
+
+            <div class="roles-preview">
+                <div class="role-chip">👤 Học viên</div>
+                <div class="role-chip">💻 IT Admin</div>
+                <div class="role-chip">👥 Nhân sự</div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="num">3</div>
+                    <div class="lbl">Vai trò</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">∞</div>
+                    <div class="lbl">Khóa học</div>
+                </div>
+                <div class="stat-item">
+                    <div class="num">24/7</div>
+                    <div class="lbl">Truy cập</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Login Form -->
+    <div class="right-panel">
+        <div class="login-header" id="department-header">
+            <div id="dept-logo-container" style="display:none; margin-bottom: 20px; text-align: center;">
+                <img id="dept-logo" src="" alt="Logo" style="max-height: 80px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+                <h2 id="dept-name" style="font-size: 18px; margin-top: 10px; color: #1e3a8a;"></h2>
+            </div>
+            <div id="default-header">
+                <h1>Chào mừng trở lại 👋</h1>
+                <p>Đăng nhập để tiếp tục hành trình học tập của bạn</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+        {
+            <div class="error-alert">
+                ⚠️ @ViewBag.Error
+            </div>
+        }
+
+        <form method="post" asp-action="Login" asp-controller="Auth" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="username">Tên đăng nhập</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="username" name="username" class="form-input"
+                           placeholder="Nhập tên đăng nhập" autocomplete="username" required 
+                           onblur="fetchDeptInfo()"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">Mật khẩu</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="password" name="password" class="form-input"
+                           placeholder="Nhập mật khẩu" autocomplete="current-password" required />
+                    <button type="button" class="password-toggle" onclick="togglePassword()" id="togglePwdBtn">👁️</button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span>Đăng nhập</span>
+                <span>→</span>
+            </button>
+        </form>
+
+        <div class="demo-login">
+            <div class="demo-title">Tai khoan demo de test giao dien</div>
+            <div class="demo-grid">
+                <form method="post" asp-action="DemoLogin" asp-controller="Auth">
+                    <input type="hidden" name="profile" value="it" />
+                    <button type="submit" class="demo-card">
+                        <div class="demo-card-role">⚙</div>
+                        <div class="demo-card-name">System / Admin</div>
+                        <div class="demo-card-meta">Vao dashboard quan tri he thong</div>
+                    </button>
+                </form>
+                <form method="post" asp-action="DemoLogin" asp-controller="Auth">
+                    <input type="hidden" name="profile" value="hr" />
+                    <button type="submit" class="demo-card">
+                        <div class="demo-card-role">👥</div>
+                        <div class="demo-card-name">Phong Nhan su</div>
+                        <div class="demo-card-meta">Vao giao dien manager phong HR</div>
+                    </button>
+                </form>
+                <form method="post" asp-action="DemoLogin" asp-controller="Auth">
+                    <input type="hidden" name="profile" value="manager" />
+                    <button type="submit" class="demo-card">
+                        <div class="demo-card-role">📈</div>
+                        <div class="demo-card-name">Truong phong</div>
+                        <div class="demo-card-meta">Vao giao dien quan ly dao tao trong phong</div>
+                    </button>
+                </form>
+                <form method="post" asp-action="DemoLogin" asp-controller="Auth" style="grid-column: 1 / -1;">
+                    <input type="hidden" name="profile" value="employee" />
+                    <button type="submit" class="demo-card">
+                        <div class="demo-card-role">🎓</div>
+                        <div class="demo-card-name">Nhan vien / Hoc vien</div>
+                        <div class="demo-card-meta">Vao giao dien hoc tap cua nhan vien</div>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="login-footer">
+            © @DateTime.Now.Year Corporate LMS Pro — Hệ thống quản lý đào tạo doanh nghiệp
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const btn = document.getElementById('togglePwdBtn');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                pwd.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+
+        async function fetchDeptInfo() {
+            const username = document.getElementById('username').value;
+            if (!username) return;
+
+            try {
+                const response = await fetch(`/Auth/GetDepartmentInfo?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+
+                const logoContainer = document.getElementById('dept-logo-container');
+                const defaultHeader = document.getElementById('default-header');
+                const deptLogo = document.getElementById('dept-logo');
+                const deptName = document.getElementById('dept-name');
+
+                if (data.success) {
+                    deptLogo.src = data.logoUrl || 'https://via.placeholder.com/150?text=Logo'; // Fallback nếu không có logo
+                    deptName.textContent = data.deptName;
+                    logoContainer.style.display = 'block';
+                    defaultHeader.style.display = 'none';
+                } else {
+                    logoContainer.style.display = 'none';
+                    defaultHeader.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Error fetching dept info:', err);
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function () {
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading-btn');
+            btn.innerHTML = '<span>Đang đăng nhập...</span>';
+        });
+    </script>
+</body>
+</html>

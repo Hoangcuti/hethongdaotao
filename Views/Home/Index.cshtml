@@ -1,0 +1,520 @@
+@{
+    ViewData["Title"] = "Corporate LMS - Nền Tảng Đào Tạo";
+    Layout = null; // Bỏ qua layout admin
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kênh Đào Tạo Nội Bộ - Corporate LMS</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818cf8;
+            --secondary: #06B6D4;
+            --accent: #F43F5E;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, .outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* --- Background Animation --- */
+        .bg-mesh {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            overflow: hidden;
+            z-index: -1;
+            background: linear-gradient(to bottom right, #0f172a, #111827);
+        }
+        
+        .blob {
+            position: absolute;
+            filter: blur(100px);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(79, 70, 229, 0.4); animation-delay: 0s; }
+        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: rgba(6, 182, 212, 0.3); animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: rgba(244, 63, 94, 0.2); animation-delay: -10s; }
+
+        @@keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(10%, 15%) scale(1.2); }
+        }
+
+        /* --- Navbar --- */
+        nav {
+            padding: 24px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            top: 0; left: 0; width: 100%;
+            z-index: 10;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+        }
+
+        .brand i {
+            font-size: 32px;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .btn-glow {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white !important;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
+        }
+
+        .btn-glow:hover::before {
+            left: 100%;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .badge-new {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--secondary);
+            margin-bottom: 24px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6vw, 80px);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            max-width: 900px;
+            animation: slideUp 1s ease-out;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #fff 10%, var(--secondary) 50%, var(--primary) 90%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: clamp(16px, 2vw, 20px);
+            color: var(--text-muted);
+            max-width: 700px;
+            margin-bottom: 40px;
+            animation: slideUp 1s ease-out 0.2s backwards;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 20px;
+            animation: slideUp 1s ease-out 0.4s backwards;
+        }
+
+        .btn-outline {
+            padding: 12px 28px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            color: white;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* --- Stats Row --- */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 80px;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 40px;
+            animation: fadeIn 1s ease-out 0.6s backwards;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .stat-item p {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* --- Features Section --- */
+        .features {
+            padding: 100px 5%;
+            background: var(--dark-light);
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 40px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 18px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--primary-light);
+            margin-bottom: 24px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* --- Footer --- */
+        footer {
+            background: var(--dark);
+            padding: 60px 5% 40px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 28px;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .footer-logo i {
+            color: var(--secondary);
+        }
+
+        .footer-text {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 40px;
+        }
+
+        .copyright {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+        }
+
+        /* --- Animations --- */
+        @@keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @@keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero-actions { flex-direction: column; }
+            .stats-row { flex-direction: column; gap: 30px; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Decoration -->
+    <div class="bg-mesh">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="/" class="brand">
+            <i class="ph-fill ph-graduation-cap"></i>
+            Corporate LMS
+        </a>
+        <div class="nav-links">
+            <a href="#features">Tính năng</a>
+            <a href="#explore">Khám phá</a>
+            <a href="/Student/Index" class="btn-glow">Học ngay <i class="ph-bold ph-arrow-right"></i></a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="badge-new">
+            <span style="display:flex;width:8px;height:8px;background:var(--secondary);border-radius:50%;box-shadow: 0 0 10px var(--secondary);"></span>
+            Nền tảng học tập thế hệ mới
+        </div>
+        
+        <h1>Phát triển kỹ năng <br><span class="text-gradient">đột phá giới hạn</span></h1>
+        
+        <p>Hệ thống quản lý đào tạo nội bộ thông minh giúp bạn tiếp cận kho tàng kiến thức, trau dồi chuyên môn và nhận chứng chỉ danh giá ngay hôm nay.</p>
+        
+        <div class="hero-actions">
+            <a href="/Auth/Login" class="btn-glow" style="padding: 16px 40px; font-size: 18px;">
+                Bắt đầu học ngay
+            </a>
+            <a href="#features" class="btn-outline" style="padding: 16px 40px; font-size: 18px;">
+                Tìm hiểu thêm
+            </a>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <h3>50+</h3>
+                <p>Khóa học</p>
+            </div>
+            <div class="stat-item">
+                <h3>1k+</h3>
+                <p>Học viên</p>
+            </div>
+            <div class="stat-item">
+                <h3>100%</h3>
+                <p>Khung bảo mật</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2>Học Tập Hiệu Quả Chưa Từng Có</h2>
+            <p>Khám phá môi trường học tập tiên tiến với trải nghiệm hoàn hảo.</p>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="ph-fill ph-lightning"></i>
+                </div>
+                <h3>Lộ Trình Cá Nhân Hóa</h3>
+                <p>Hệ thống tự động đề xuất lộ trình học dựa trên phòng ban và kỹ năng định hướng của riêng bạn, giúp tối ưu hóa thời gian.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="ph-fill ph-certificate"></i>
+                </div>
+                <h3>Chứng Chỉ Nội Bộ Nội Bật</h3>
+                <p>Hoàn thành xuất sắc khóa học để nhận ngay các chứng chỉ vinh danh, tự động cập nhật vào hồ sơ năng lực cá nhân và chia sẻ.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="ph-fill ph-game-controller"></i>
+                </div>
+                <h3>Game Hóa (Gamification)</h3>
+                <p>Tích lũy điểm số, nhận huy hiệu qua từng bài học để bứt phá lên đỉnh bảng xếp hạng (Leaderboard) của công ty.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">
+            <i class="ph-fill ph-graduation-cap"></i> Corporate LMS Pro
+        </div>
+        <p class="footer-text">Nền tảng đào tạo nhân sự hàng đầu, giúp doanh nghiệp phát triển bền vững qua từng cá nhân.</p>
+        
+        <div class="copyright">
+            &copy; @DateTime.Now.Year Corporate LMS Pro. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Smooth Scroll JS -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

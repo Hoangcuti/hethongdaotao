@@ -1,0 +1,10 @@
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.csproj.AssemblyReference.cache
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\rpswa.dswa.cache.json
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.GeneratedMSBuildEditorConfig.editorconfig
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.AssemblyInfoInputs.cache
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.AssemblyInfo.cs
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.csproj.CoreCompileInputs.cache
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.MvcApplicationPartsAssemblyInfo.cache
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.RazorAssemblyInfo.cache
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.RazorAssemblyInfo.cs
+D:\thyachuong\thyachuong\KhoaHoc\tempobj\Debug\net9.0\KhoaHoc.sourcelink.json
