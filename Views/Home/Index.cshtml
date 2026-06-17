@@ -1,18 +1,19 @@
-﻿@{
-    ViewData["Title"] = "Corporate LMS - Nền Tảng Đào Tạo";
-    Layout = null; // Bỏ qua layout admin
+@{
+    ViewData["Title"] = "Corporate LMS - Nền Tảng Đào Tạo Nội Bộ Toàn Diện";
+    Layout = null; // Bỏ qua layout admin mặc định
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kênh Đào Tạo Nội Bộ - Corporate LMS</title>
+    <title>Corporate LMS - Tối Ưu Hóa Năng Lực Đội Ngũ</title>
+    <meta name="description" content="Hệ thống quản lý đào tạo nội bộ doanh nghiệp toàn diện. Số hóa quy trình học tập, tối ưu hóa tri thức và bứt phá hiệu năng nhân sự." />
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@@phosphor-icons/web"></script>
@@ -20,384 +21,918 @@
     <style>
         :root {
             --primary: #4F46E5;
-            --primary-light: #818cf8;
+            --primary-hover: #4338CA;
+            --primary-glow: rgba(79, 70, 229, 0.4);
             --secondary: #06B6D4;
-            --accent: #F43F5E;
-            --dark: #0f172a;
-            --dark-light: #1e293b;
+            --secondary-glow: rgba(6, 182, 212, 0.3);
+            --accent-pain: #F43F5E;
+            --accent-pain-glow: rgba(244, 63, 94, 0.15);
+            --accent-sol: #10B981;
+            --accent-sol-glow: rgba(16, 185, 129, 0.15);
+            --dark: #090a0f;
+            --dark-light: #131520;
+            --dark-card: #1c1f30;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-display: 'Outfit', sans-serif;
+            --font-text: 'Inter', sans-serif;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: var(--font-text);
             background-color: var(--dark);
             color: var(--text-main);
             overflow-x: hidden;
             line-height: 1.6;
         }
 
-        h1, h2, h3, h4, .outfit {
-            font-family: 'Outfit', sans-serif;
+        h1, h2, h3, h4, .font-display {
+            font-family: var(--font-display);
+            letter-spacing: -0.02em;
         }
 
-        /* --- Background Animation --- */
+        /* --- Background Mesh Animation --- */
         .bg-mesh {
             position: absolute;
-            top: 0; left: 0; width: 100vw; height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 120vh;
             overflow: hidden;
             z-index: -1;
-            background: linear-gradient(to bottom right, #0f172a, #111827);
+            background: linear-gradient(180deg, #090a0f 0%, #131520 100%);
+            pointer-events: none;
         }
         
         .blob {
             position: absolute;
-            filter: blur(100px);
+            filter: blur(120px);
             border-radius: 50%;
-            opacity: 0.6;
-            animation: float 20s infinite ease-in-out alternate;
+            opacity: 0.45;
+            animation: float 25s infinite ease-in-out alternate;
         }
 
-        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(79, 70, 229, 0.4); animation-delay: 0s; }
-        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: rgba(6, 182, 212, 0.3); animation-delay: -5s; }
-        .blob-3 { top: 40%; left: 40%; width: 40vw; height: 40vw; background: rgba(244, 63, 94, 0.2); animation-delay: -10s; }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary-glow); animation-delay: 0s; }
+        .blob-2 { bottom: 10%; right: -10%; width: 55vw; height: 55vw; background: var(--secondary-glow); animation-delay: -5s; }
+        .blob-3 { top: 35%; left: 35%; width: 35vw; height: 35vw; background: rgba(99, 102, 241, 0.2); animation-delay: -10s; }
 
         @@keyframes float {
             0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(10%, 15%) scale(1.2); }
+            100% { transform: translate(8%, 12%) scale(1.15); }
         }
 
-        /* --- Navbar --- */
-        nav {
-            padding: 24px 5%;
+        /* --- Navigation --- */
+        header {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+            padding: 16px 32px;
+            background: rgba(13, 14, 21, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 100px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            z-index: 10;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled {
+            top: 0;
+            width: 100%;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-top: none;
+            background: rgba(9, 10, 15, 0.9);
+            padding: 14px 5%;
         }
 
         .brand {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 24px;
+            gap: 10px;
+            font-size: 22px;
             font-weight: 800;
-            color: white;
+            color: #fff;
             text-decoration: none;
         }
 
         .brand i {
-            font-size: 32px;
+            font-size: 28px;
             background: linear-gradient(135deg, var(--secondary), var(--primary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .nav-links {
+        .nav-menu {
             display: flex;
-            gap: 32px;
+            gap: 30px;
             align-items: center;
+            list-style: none;
         }
 
-        .nav-links a {
+        .nav-link {
             color: var(--text-muted);
             text-decoration: none;
+            font-size: 14px;
             font-weight: 500;
-            transition: color 0.3s;
+            transition: color 0.3s ease;
         }
 
-        .nav-links a:hover {
-            color: white;
+        .nav-link:hover {
+            color: #fff;
         }
 
-        .btn-glow {
-            padding: 12px 28px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white !important;
+        .btn-nav-login {
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: #fff;
             border-radius: 50px;
+            font-size: 14px;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .btn-glow::before {
-            content: '';
-            position: absolute;
-            top: 0; left: -100%;
-            width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transition: left 0.6s;
-        }
-
-        .btn-glow:hover {
+        .btn-nav-login:hover {
+            background: #fff;
+            color: var(--dark);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
         }
 
-        .btn-glow:hover::before {
-            left: 100%;
+        /* --- Global Sections --- */
+        section {
+            padding: 120px 5%;
+            position: relative;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .section-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+        }
+
+        .section-tag.pain { color: var(--accent-pain); }
+        .section-tag.sol { color: var(--accent-sol); }
+        .section-tag.primary { color: var(--secondary); }
+
+        .section-title {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
+
+        .section-desc {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin-bottom: 50px;
         }
 
         /* --- Hero Section --- */
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 0 20px;
-            position: relative;
+            padding-top: 150px;
+            padding-bottom: 80px;
         }
 
-        .badge-new {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--secondary);
-            margin-bottom: 24px;
+        .hero-container {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 50px;
+            align-items: center;
+            width: 100%;
+        }
+
+        .hero-badge {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            animation: slideDown 0.8s ease-out;
+            background: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            color: #818cf8;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero-badge span {
+            width: 8px;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--secondary);
         }
 
         .hero h1 {
-            font-size: clamp(40px, 6vw, 80px);
+            font-size: clamp(40px, 5.5vw, 68px);
             font-weight: 900;
             line-height: 1.1;
             margin-bottom: 24px;
-            max-width: 900px;
-            animation: slideUp 1s ease-out;
+            color: #fff;
         }
 
-        .text-gradient {
-            background: linear-gradient(135deg, #fff 10%, var(--secondary) 50%, var(--primary) 90%);
+        .hero-gradient {
+            background: linear-gradient(135deg, #fff 20%, var(--secondary) 60%, var(--primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .hero p {
-            font-size: clamp(16px, 2vw, 20px);
+            font-size: clamp(16px, 1.8vw, 19px);
             color: var(--text-muted);
-            max-width: 700px;
             margin-bottom: 40px;
-            animation: slideUp 1s ease-out 0.2s backwards;
+            max-width: 650px;
         }
 
         .hero-actions {
             display: flex;
             gap: 20px;
-            animation: slideUp 1s ease-out 0.4s backwards;
+            flex-wrap: wrap;
         }
 
-        .btn-outline {
-            padding: 12px 28px;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            color: white;
+        .btn-primary {
+            padding: 16px 36px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
             border-radius: 50px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             text-decoration: none;
-            transition: all 0.3s;
-            border: 1px solid var(--glass-border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
         }
 
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.55);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            padding: 16px 36px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
         }
 
-        /* --- Stats Row --- */
-        .stats-row {
+        /* --- Interactive Mockup Dashboard (Hero Right) --- */
+        .mockup-container {
+            position: relative;
             display: flex;
             justify-content: center;
-            gap: 60px;
-            margin-top: 80px;
-            border-top: 1px solid var(--glass-border);
-            padding-top: 40px;
-            animation: fadeIn 1s ease-out 0.6s backwards;
+            align-items: center;
         }
 
-        .stat-item {
-            text-align: center;
+        .mockup-dashboard {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(22, 24, 38, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            position: relative;
+            animation: floatCard 6s infinite ease-in-out;
         }
 
-        .stat-item h3 {
-            font-size: 36px;
-            font-weight: 800;
-            color: white;
-            margin-bottom: 4px;
+        @@keyframes floatCard {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
 
-        .stat-item p {
-            font-size: 14px;
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 12px;
+        }
+
+        .mockup-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mockup-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .mockup-dot.r { background: #ef4444; }
+        .mockup-dot.y { background: #f59e0b; }
+        .mockup-dot.g { background: #10b981; }
+
+        .mockup-title {
+            font-size: 11px;
+            font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.1em;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .mockup-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 14px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .mockup-card-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .mockup-card-val {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .mockup-progress-sec {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 14px;
+        }
+
+        .mockup-progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mockup-progress-title {
+            font-size: 12px;
             font-weight: 600;
         }
 
-        /* --- Features Section --- */
-        .features {
-            padding: 100px 5%;
-            background: var(--dark-light);
-            position: relative;
+        .mockup-progress-pct {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--secondary);
         }
 
-        .section-header {
-            text-align: center;
-            margin-bottom: 60px;
+        .mockup-progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
-        .section-header h2 {
-            font-size: 40px;
-            font-weight: 800;
-            margin-bottom: 16px;
+        .mockup-progress-fill {
+            width: 78%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
         }
 
-        .section-header p {
-            color: var(--text-muted);
-            font-size: 18px;
+        .mockup-badge {
+            position: absolute;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            top: -20px;
+            right: -20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            animation: floatBadge 4s infinite ease-in-out alternate;
         }
 
-        .feature-grid {
+        .mockup-badge-2 {
+            position: absolute;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+            padding: 8px 16px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            bottom: -15px;
+            left: -20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            animation: floatBadge2 5s infinite ease-in-out alternate;
+        }
+
+        @@keyframes floatBadge {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+
+        @@keyframes floatBadge2 {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(8px); }
+        }
+
+        /* --- Zebra Striping Sections --- */
+        
+        /* Dải 1: Hero (Tối - Đã định nghĩa nền body mặc định) */
+
+        /* Dải 2: Pain Points (Nền tối xám/xanh nhẹ tạo tương phản nhẹ) */
+        .pain-points-section {
+            background-color: var(--dark-light);
+            border-top: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .pain-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
         }
 
-        .feature-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 40px 30px;
-            transition: all 0.4s;
+        .pain-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 36px 28px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
-        .feature-card::before {
+        .pain-card::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
-            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            inset: 0;
+            background: radial-gradient(circle at top right, var(--accent-pain-glow), transparent 45%);
             opacity: 0;
-            transition: opacity 0.4s;
+            transition: opacity 0.3s ease;
         }
 
-        .feature-card:hover {
-            transform: translateY(-10px);
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        .pain-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(244, 63, 94, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
         }
 
-        .feature-card:hover::before {
+        .pain-card:hover::after {
             opacity: 1;
         }
 
-        .feature-icon {
+        .pain-icon-wrapper {
+            width: 54px;
+            height: 54px;
+            background: rgba(244, 63, 94, 0.08);
+            border: 1px solid rgba(244, 63, 94, 0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            color: var(--accent-pain);
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .pain-card:hover .pain-icon-wrapper {
+            background: var(--accent-pain);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+        }
+
+        .pain-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pain-card p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Dải 3: Solutions (Nền cực tối - làm nổi bật giải pháp bằng các ánh sáng xanh) */
+        .solutions-section {
+            background-color: var(--dark);
+        }
+
+        .sol-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .sol-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.03) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sol-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: linear-gradient(90deg, var(--secondary), var(--accent-sol));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .sol-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(16, 185, 129, 0.25);
+            background: rgba(22, 25, 41, 0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(16, 185, 129, 0.05);
+        }
+
+        .sol-card:hover::before {
+            opacity: 1;
+        }
+
+        .sol-icon-wrapper {
             width: 60px;
             height: 60px;
-            background: rgba(79, 70, 229, 0.1);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            color: var(--primary-light);
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+            color: var(--accent-sol);
+            font-size: 28px;
+            transition: all 0.3s ease;
         }
 
-        .feature-card h3 {
-            font-size: 24px;
-            margin-bottom: 12px;
+        .sol-card:hover .sol-icon-wrapper {
+            background: var(--accent-sol);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(16, 185, 129, 0.4);
         }
 
-        .feature-card p {
+        .sol-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 14px;
+        }
+
+        .sol-card p {
+            font-size: 15px;
             color: var(--text-muted);
             line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        /* --- Stats/Benefits Highlight --- */
+        .benefits-section {
+            background-color: var(--dark-light);
+            padding-bottom: 100px;
+        }
+
+        .benefits-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .benefits-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .b-stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 30px 24px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .b-stat-num {
+            font-size: 44px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #fff, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .b-stat-lbl {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .benefits-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .benefit-item {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .benefit-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-sol);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-top: 3px;
+        }
+
+        .benefit-content h4 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .benefit-content p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* --- Call to Action Section --- */
+        .cta-section {
+            background-color: var(--dark);
+            padding: 100px 5%;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            padding: 80px 40px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+            top: -100px; left: -100px;
+        }
+
+        .cta-box::after {
+            content: '';
+            position: absolute;
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+            bottom: -150px; right: -100px;
+        }
+
+        .cta-box h2 {
+            font-size: clamp(28px, 3.5vw, 44px);
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-box p {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 36px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-actions {
+            position: relative;
+            z-index: 1;
         }
 
         /* --- Footer --- */
         footer {
-            background: var(--dark);
-            padding: 60px 5% 40px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            text-align: center;
+            background: #06070a;
+            padding: 80px 5% 40px;
+            border-top: 1px solid rgba(255,255,255,0.03);
         }
 
-        .footer-logo {
-            font-size: 28px;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto 60px;
+        }
+
+        .footer-brand p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 16px;
+            max-width: 300px;
+        }
+
+        .footer-cols h5 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
             margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        .copyright-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .copyright-text {
+            color: rgba(255,255,255,0.4);
+            font-size: 13px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-link {
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-        }
-
-        .footer-logo i {
-            color: var(--secondary);
-        }
-
-        .footer-text {
             color: var(--text-muted);
-            font-size: 15px;
-            margin-bottom: 40px;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
-        .copyright {
-            padding-top: 30px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.4);
-            font-size: 14px;
+        .social-link:hover {
+            background: #fff;
+            color: var(--dark);
+            transform: translateY(-2px);
         }
 
-        /* --- Animations --- */
+        /* --- Keyframes & Animation utilities --- */
         @@keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @@keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animated {
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
-        @@keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .sol-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* Responsive */
         @@media (max-width: 768px) {
-            .nav-links { display: none; }
-            .hero-actions { flex-direction: column; }
-            .stats-row { flex-direction: column; gap: 30px; align-items: center; }
+            header { padding: 12px 24px; }
+            .nav-menu { display: none; }
+            .hero-container { grid-template-columns: 1fr; gap: 40px; }
+            .mockup-dashboard { margin: 0 auto; }
+            .sol-grid { grid-template-columns: 1fr; }
+            .benefits-container { grid-template-columns: 1fr; gap: 40px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 30px; }
         }
     </style>
 </head>
@@ -410,109 +945,321 @@
         <div class="blob blob-3"></div>
     </div>
 
-    <!-- Navigation -->
-    <nav>
+    <!-- Navigation Header -->
+    <header id="header">
         <a href="/" class="brand">
             <i class="ph-fill ph-graduation-cap"></i>
             Corporate LMS
         </a>
-        <div class="nav-links">
-            <a href="#features">Tính năng</a>
-            <a href="#explore">Khám phá</a>
-            <a href="/Student/Index" class="btn-glow">Học ngay <i class="ph-bold ph-arrow-right"></i></a>
-        </div>
-    </nav>
+        <ul class="nav-menu">
+            <li><a href="#pain-points" class="nav-link">Nỗi Đau Doanh Nghiệp</a></li>
+            <li><a href="#solutions" class="nav-link">Giải Pháp</a></li>
+            <li><a href="#benefits" class="nav-link">Lợi Ích</a></li>
+        </ul>
+        <a href="/Auth/Login" class="btn-nav-login">
+            <i class="ph-bold ph-sign-in"></i> Đăng nhập hệ thống
+        </a>
+    </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="badge-new">
-            <span style="display:flex;width:8px;height:8px;background:var(--secondary);border-radius:50%;box-shadow: 0 0 10px var(--secondary);"></span>
-            Nền tảng học tập thế hệ mới
-        </div>
-        
-        <h1>Phát triển kỹ năng <br><span class="text-gradient">đột phá giới hạn</span></h1>
-        
-        <p>Hệ thống quản lý đào tạo nội bộ thông minh giúp bạn tiếp cận kho tàng kiến thức, trau dồi chuyên môn và nhận chứng chỉ danh giá ngay hôm nay.</p>
-        
-        <div class="hero-actions">
-            <a href="/Auth/Login" class="btn-glow" style="padding: 16px 40px; font-size: 18px;">
-                Bắt đầu học ngay
-            </a>
-            <a href="#features" class="btn-outline" style="padding: 16px 40px; font-size: 18px;">
-                Tìm hiểu thêm
-            </a>
-        </div>
+        <div class="hero-container">
+            <div class="animated" style="animation-delay: 0.1s;">
+                <div class="hero-badge">
+                    <span></span> Nền tảng học tập nội bộ thế hệ mới
+                </div>
+                <h1>Corporate LMS <br><span class="hero-gradient">Nâng tầm năng lực đội ngũ</span></h1>
+                <p>Giải pháp tối ưu hóa đào tạo nội bộ toàn diện cho mọi quy mô doanh nghiệp. Rút ngắn khoảng cách tri thức, tự động hóa lộ trình phát triển và bứt phá hiệu năng làm việc của nhân sự.</p>
+                <div class="hero-actions">
+                    <a href="/Auth/Login" class="btn-primary">
+                        Trải nghiệm ngay <i class="ph-bold ph-arrow-right"></i>
+                    </a>
+                    <a href="#pain-points" class="btn-secondary">
+                        Tìm hiểu thêm
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mockup-container animated" style="animation-delay: 0.3s;">
+                <!-- Mockup Dashboard UI -->
+                <div class="mockup-dashboard">
+                    <div class="mockup-header">
+                        <div class="mockup-dots">
+                            <span class="mockup-dot r"></span>
+                            <span class="mockup-dot y"></span>
+                            <span class="mockup-dot g"></span>
+                        </div>
+                        <span class="mockup-title">LMS System Preview</span>
+                        <div style="width:20px;"></div>
+                    </div>
+                    
+                    <div class="mockup-grid">
+                        <div class="mockup-card">
+                            <span class="mockup-card-label">Tổng nhân viên</span>
+                            <span class="mockup-card-val">1,248</span>
+                        </div>
+                        <div class="mockup-card">
+                            <span class="mockup-card-label">Khóa học active</span>
+                            <span class="mockup-card-val">52</span>
+                        </div>
+                    </div>
 
-        <div class="stats-row">
-            <div class="stat-item">
-                <h3>50+</h3>
-                <p>Khóa học</p>
-            </div>
-            <div class="stat-item">
-                <h3>1k+</h3>
-                <p>Học viên</p>
-            </div>
-            <div class="stat-item">
-                <h3>100%</h3>
-                <p>Khung bảo mật</p>
+                    <div class="mockup-progress-sec">
+                        <div class="mockup-progress-header">
+                            <span class="mockup-progress-title">Tỷ lệ hoàn thành đào tạo</span>
+                            <span class="mockup-progress-pct">78%</span>
+                        </div>
+                        <div class="mockup-progress-bar">
+                            <div class="mockup-progress-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="mockup-progress-sec" style="margin-bottom: 0;">
+                        <div class="mockup-progress-header" style="margin-bottom: 6px;">
+                            <span class="mockup-progress-title" style="font-size:11px;color:var(--text-muted)">Phòng ban hoạt động tích cực</span>
+                        </div>
+                        <div style="font-size: 13px; font-weight: 600; display:flex; justify-content:space-between;">
+                            <span>🏢 Phòng Kỹ thuật (IT)</span>
+                            <span style="color:#10b981">92%</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating Badges -->
+                    <div class="mockup-badge">
+                        <i class="ph-bold ph-chart-line-up"></i> Tăng 35% hiệu năng
+                    </div>
+                    <div class="mockup-badge-2">
+                        <i class="ph-bold ph-shield-check"></i> Bảo mật 100%
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="section-header">
-            <h2>Học Tập Hiệu Quả Chưa Từng Có</h2>
-            <p>Khám phá môi trường học tập tiên tiến với trải nghiệm hoàn hảo.</p>
+    <!-- Pain Points Section (Zebra stripe - dark-light bg) -->
+    <section class="pain-points-section" id="pain-points">
+        <div class="section-tag pain">
+            <i class="ph-bold ph-warning-circle"></i> Vấn đề hiện tại
         </div>
+        <h2 class="section-title">Thách thức lớn nhất trong đào tạo doanh nghiệp</h2>
+        <p class="section-desc">Phương thức đào tạo truyền thống đã không còn phù hợp trong kỷ nguyên số. Doanh nghiệp của bạn có đang đối mặt với những vấn đề này?</p>
 
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="ph-fill ph-lightning"></i>
+        <div class="pain-grid">
+            <!-- Card 1 -->
+            <div class="pain-card">
+                <div class="pain-icon-wrapper">
+                    <i class="ph-fill ph-trend-down"></i>
                 </div>
-                <h3>Lộ Trình Cá Nhân Hóa</h3>
-                <p>Hệ thống tự động đề xuất lộ trình học dựa trên phòng ban và kỹ năng định hướng của riêng bạn, giúp tối ưu hóa thời gian.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="ph-fill ph-certificate"></i>
-                </div>
-                <h3>Chứng Chỉ Nội Bộ Nội Bật</h3>
-                <p>Hoàn thành xuất sắc khóa học để nhận ngay các chứng chỉ vinh danh, tự động cập nhật vào hồ sơ năng lực cá nhân và chia sẻ.</p>
+                <h3>Chi phí vận hành cao</h3>
+                <p>Tổ chức đào tạo offline tốn kém ngân sách thuê địa điểm, chi phí giảng viên, in ấn tài liệu và phải lặp đi lặp lại mỗi khi có nhân sự mới.</p>
             </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="ph-fill ph-game-controller"></i>
+            <!-- Card 2 -->
+            <div class="pain-card">
+                <div class="pain-icon-wrapper">
+                    <i class="ph-fill ph-hourglass-high"></i>
                 </div>
-                <h3>Game Hóa (Gamification)</h3>
-                <p>Tích lũy điểm số, nhận huy hiệu qua từng bài học để bứt phá lên đỉnh bảng xếp hạng (Leaderboard) của công ty.</p>
+                <h3>Lãng phí thời gian</h3>
+                <p>Nhân sự phải tạm ngừng công việc chuyên môn để tham gia các lớp học tập trung kéo dài, ảnh hưởng tiêu cực đến tiến độ dự án.</p>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="pain-card">
+                <div class="pain-icon-wrapper">
+                    <i class="ph-fill ph-chart-bar"></i>
+                </div>
+                <h3>Khó đánh giá hiệu quả</h3>
+                <p>Hoàn toàn không có dữ liệu đo lường cụ thể về tiến độ học tập, điểm kiểm tra của nhân viên. Dữ liệu rời rạc, khó theo dõi qua các file Excel thủ công.</p>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="pain-card">
+                <div class="pain-icon-wrapper">
+                    <i class="ph-fill ph-folder-open"></i>
+                </div>
+                <h3>Thất thoát tri thức</h3>
+                <p>Tài liệu đào tạo lưu trữ phân tán trên Google Drive, Zalo, Email... Khi nhân sự cốt cán nghỉ việc, quy trình đào tạo và bí quyết bị đứt gãy.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Solution Section (Zebra stripe - dark bg) -->
+    <section class="solutions-section" id="solutions">
+        <div class="section-tag sol">
+            <i class="ph-bold ph-check-circle"></i> Giải pháp tối ưu
+        </div>
+        <h2 class="section-title">Corporate LMS - Số hóa học tập nội bộ</h2>
+        <p class="section-desc">Giải pháp phần mềm toàn diện giúp thay đổi hoàn toàn cách doanh nghiệp phân phối tri thức và phát triển kỹ năng nhân viên.</p>
+
+        <div class="sol-grid">
+            <!-- Sol Card 1 -->
+            <div class="sol-card">
+                <div class="sol-icon-wrapper">
+                    <i class="ph-fill ph-device-mobile-camera"></i>
+                </div>
+                <h3>Số hóa 100% - Học tập 24/7</h3>
+                <p>Học viên chủ động truy cập hệ thống học tập mọi lúc, mọi nơi từ điện thoại đến máy tính. Tiết kiệm hơn 80% chi phí tổ chức so với lớp học truyền thống.</p>
+            </div>
+
+            <!-- Sol Card 2 -->
+            <div class="sol-card">
+                <div class="sol-icon-wrapper">
+                    <i class="ph-fill ph-target"></i>
+                </div>
+                <h3>Quản lý tập trung chuyên nghiệp</h3>
+                <p>Lưu trữ và tổ chức chuyên nghiệp toàn bộ kho khóa học, tài liệu giảng dạy đa phương tiện (Video, PDF), ngân hàng đề kiểm tra trên một nền tảng duy nhất.</p>
+            </div>
+
+            <!-- Sol Card 3 -->
+            <div class="sol-card">
+                <div class="sol-icon-wrapper">
+                    <i class="ph-fill ph-chart-pie-slice"></i>
+                </div>
+                <h3>Dashboard Báo cáo Real-time</h3>
+                <p>Cập nhật tự động, chính xác các số liệu thống kê về tiến trình học, điểm số của từng cá nhân và phòng ban thông qua hệ thống báo cáo trực quan cho HR & Manager.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Benefits / Stats Section (Zebra stripe - dark-light bg) -->
+    <section class="benefits-section" id="benefits">
+        <div class="benefits-container">
+            <div>
+                <div class="section-tag primary">
+                    <i class="ph-bold ph-sparkles"></i> Lợi ích thực tế
+                </div>
+                <h2 class="section-title">Kết quả đo lường được trên con số</h2>
+                <p class="section-desc">Đem lại hiệu quả bứt phá cho doanh nghiệp khi chuyển đổi sang mô hình số hóa tri thức.</p>
+                
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <div class="benefit-check"><i class="ph-bold ph-check"></i></div>
+                        <div class="benefit-content">
+                            <h4>Tiết kiệm tối đa ngân sách</h4>
+                            <p>Không còn phát sinh chi phí in ấn, thuê địa điểm tổ chức đào tạo định kỳ.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-check"><i class="ph-bold ph-check"></i></div>
+                        <div class="benefit-content">
+                            <h4>Tích hợp AI tạo học liệu</h4>
+                            <p>Trợ lý AI hỗ trợ người quản trị nhanh chóng lập đề cương khóa học và tạo nội dung tự động.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-check"><i class="ph-bold ph-check"></i></div>
+                        <div class="benefit-content">
+                            <h4>Bảo mật thông tin tối đa</h4>
+                            <p>Phân quyền bảo mật cao cho tài liệu đào tạo nội bộ, không lo rò rỉ bí mật công nghệ.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="benefits-stats">
+                <div class="b-stat-card">
+                    <div class="b-stat-num">-80%</div>
+                    <div class="b-stat-lbl">Chi phí đào tạo</div>
+                </div>
+                <div class="b-stat-card" style="transform: translateY(20px);">
+                    <div class="b-stat-num">+35%</div>
+                    <div class="b-stat-lbl">Hiệu năng nhân sự</div>
+                </div>
+                <div class="b-stat-card">
+                    <div class="b-stat-num">100%</div>
+                    <div class="b-stat-lbl">Báo cáo tự động</div>
+                </div>
+                <div class="b-stat-card" style="transform: translateY(20px);">
+                    <div class="b-stat-num">24/7</div>
+                    <div class="b-stat-lbl">Học tập linh hoạt</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+        <div class="cta-box">
+            <h2>Nâng cao năng lực đội ngũ của bạn ngay hôm nay</h2>
+            <p>Trải nghiệm hệ thống đào tạo nội bộ thông minh thế hệ mới, số hóa tri thức và thúc đẩy tăng trưởng vượt bậc cho doanh nghiệp.</p>
+            <div class="cta-actions">
+                <a href="/Auth/Login" class="btn-primary" style="padding: 18px 45px; font-size: 18px;">
+                    Trải nghiệm ngay <i class="ph-bold ph-arrow-square-out"></i>
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer>
-        <div class="footer-logo">
-            <i class="ph-fill ph-graduation-cap"></i> Corporate LMS Pro
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="/" class="brand">
+                    <i class="ph-fill ph-graduation-cap"></i>
+                    Corporate LMS
+                </a>
+                <p>Nền tảng đào tạo nội bộ tối ưu giúp nâng tầm tri thức và năng lực nhân sự của mọi doanh nghiệp Việt Nam.</p>
+            </div>
+            
+            <div class="footer-cols">
+                <h5>Hệ thống</h5>
+                <ul class="footer-links">
+                    <li><a href="#pain-points">Thách thức</a></li>
+                    <li><a href="#solutions">Giải pháp số</a></li>
+                    <li><a href="#benefits">Lợi ích mang lại</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-cols">
+                <h5>Liên kết</h5>
+                <ul class="footer-links">
+                    <li><a href="/Auth/Login">Đăng nhập hệ thống</a></li>
+                    <li><a href="/Student/Index">Trang học viên</a></li>
+                    <li><a href="#">Hỗ trợ kỹ thuật</a></li>
+                </ul>
+            </div>
         </div>
-        <p class="footer-text">Nền tảng đào tạo nhân sự hàng đầu, giúp doanh nghiệp phát triển bền vững qua từng cá nhân.</p>
-        
-        <div class="copyright">
-            &copy; @DateTime.Now.Year Corporate LMS Pro. All rights reserved.
+
+        <div class="copyright-container">
+            <span class="copyright-text">
+                &copy; @DateTime.Now.Year Corporate LMS Pro. All rights reserved.
+            </span>
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="ph-bold ph-facebook-logo"></i></a>
+                <a href="#" class="social-link"><i class="ph-bold ph-linkedin-logo"></i></a>
+                <a href="#" class="social-link"><i class="ph-bold ph-globe"></i></a>
+            </div>
         </div>
     </footer>
 
-    <!-- Smooth Scroll JS -->
+    <!-- Header Scroll Effect & Animation trigger JS -->
     <script>
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header');
+            if (window.scrollY > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for nav-links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const offset = 100; // Offset for fixed header
+                    const bodyRect = document.body.getBoundingClientRect().top;
+                    const targetRect = target.getBoundingClientRect().top;
+                    const targetPosition = targetRect - bodyRect;
+                    const offsetPosition = targetPosition - offset;
+
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
     </script>

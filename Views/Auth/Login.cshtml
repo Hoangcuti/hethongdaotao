@@ -148,8 +148,9 @@
         }
 
         .login-header { margin-bottom: 36px; }
-        .login-header h1 { font-size: 26px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; }
-        .login-header p { font-size: 14px; color: var(--color-text-secondary); margin-top: 6px; }
+        .login-header h1 { font-size: 26px; font-weight: 600; color: var(--color-text); letter-spacing: -0.5px; transition: color 0.3s ease; }
+        .login-header p { font-size: 14px; color: var(--color-text-secondary); margin-top: 6px; transition: color 0.3s ease; }
+        .login-header.has-dept h1 { color: #1e3a8a; } /* Đổi màu nhấn nhẹ khi nhận diện phòng ban */
 
         .form-group { margin-bottom: 20px; }
         .form-label {
@@ -277,9 +278,7 @@
             gap: 10px;
         }
 
-        .demo-grid form {
-            margin: 0;
-        }
+        .demo-grid form { margin: 0; }
 
         .demo-card {
             width: 100%;
@@ -313,17 +312,8 @@
             margin-bottom: 10px;
         }
 
-        .demo-card-name {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 3px;
-        }
-
-        .demo-card-meta {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            line-height: 1.45;
-        }
+        .demo-card-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+        .demo-card-meta { font-size: 12px; color: var(--color-text-secondary); line-height: 1.45; }
 
         @@media (max-width: 900px) {
             .left-panel { display: none; }
@@ -333,7 +323,6 @@
     </style>
 </head>
 <body>
-    <!-- Left Panel -->
     <div class="left-panel">
         <div class="left-content">
             <div class="brand-logo">
@@ -373,16 +362,10 @@
         </div>
     </div>
 
-    <!-- Right Panel: Login Form -->
     <div class="right-panel">
-        <div class="login-header" id="department-header">
-            <div id="dept-logo-container" style="display:none; margin-bottom: 20px; text-align: center;">
-                <h2 id="dept-name" style="font-size: 18px; margin-top: 10px; color: #1e3a8a;"></h2>
-            </div>
-            <div id="default-header">
-                <h1>Chào mừng trở lại 👋</h1>
-                <p>Đăng nhập để tiếp tục hành trình học tập của bạn</p>
-            </div>
+        <div class="login-header" id="login-header">
+            <h1 id="login-title">Chào mừng trở lại 👋</h1>
+            <p id="login-subtitle">Đăng nhập để tiếp tục hành trình học tập của bạn</p>
         </div>
 
         @if (!string.IsNullOrEmpty(ViewBag.Error as string))
@@ -409,7 +392,7 @@
                     <span class="input-icon">🔒</span>
                     <input type="password" id="password" name="password" class="form-input"
                            placeholder="Nhập mật khẩu" autocomplete="current-password" required />
-                    <button type="button" class="password-toggle" onclick="togglePassword()" id="togglePwdBtn">👁️</button>
+                    <button type="button" class="password-toggle" onclick="togglePassword()" id="togglePwdBtn" aria-label="Hiển thị mật khẩu">👁️</button>
                 </div>
             </div>
 
@@ -469,12 +452,15 @@
             if (pwd.type === 'password') {
                 pwd.type = 'text';
                 btn.textContent = '🙈';
+                btn.setAttribute('aria-label', 'Ẩn mật khẩu');
             } else {
                 pwd.type = 'password';
                 btn.textContent = '👁️';
+                btn.setAttribute('aria-label', 'Hiển thị mật khẩu');
             }
         }
 
+        // Đgradient NÂNG CẤP JS: Xử lý chữ động mượt mà, không lỗi thẻ IMG
         async function fetchDeptInfo() {
             const username = document.getElementById('username').value;
             if (!username) return;
@@ -483,21 +469,20 @@
                 const response = await fetch(`/Auth/GetDepartmentInfo?username=${encodeURIComponent(username)}`);
                 const data = await response.json();
 
-                const logoContainer = document.getElementById('dept-logo-container');
-                const defaultHeader = document.getElementById('default-header');
-                const deptLogo = document.getElementById('dept-logo');
-                const deptName = document.getElementById('dept-name');
+                const headerContainer = document.getElementById('login-header');
+                const loginTitle = document.getElementById('login-title');
+                const loginSubtitle = document.getElementById('login-subtitle');
 
-                if (data.success) {
-                    if (deptLogo) {
-                        deptLogo.src = data.logoUrl || 'https://via.placeholder.com/150?text=Logo';
-                    }
-                    deptName.textContent = data.deptName;
-                    logoContainer.style.display = 'block';
-                    defaultHeader.style.display = 'none';
+                if (data.success && data.deptName) {
+                    // Khi tìm thấy phòng ban: Đổi text lịch sự, chuyên nghiệp
+                    loginTitle.textContent = `Chào mừng bạn trở lại 👋`;
+                    loginSubtitle.textContent = `Hệ thống đào tạo nhân sự — ${data.deptName}`;
+                    headerContainer.classList.add('has-dept');
                 } else {
-                    logoContainer.style.display = 'none';
-                    defaultHeader.style.display = 'block';
+                    // Trở về trạng thái mặc định
+                    loginTitle.textContent = "Chào mừng trở lại 👋";
+                    loginSubtitle.textContent = "Đăng nhập để tiếp tục hành trình học tập của bạn";
+                    headerContainer.classList.remove('has-dept');
                 }
             } catch (err) {
                 console.error('Error fetching dept info:', err);
