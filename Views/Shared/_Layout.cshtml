@@ -47,7 +47,7 @@
             </div>
 
             <nav class="sidebar-nav" aria-label="Sidebar navigation">
-                <div class="nav-section-label">Overview</div>
+                <div class="nav-section-label">Tổng quan</div>
                 <ul>
                     <li class="nav-item">
                         <a class="nav-link active" onclick="location.href='@Url.Action("Index", role == "IT" ? "IT" : "HR")'">
@@ -59,79 +59,73 @@
 
                 @if (role == "Manager" || role == "Trainer" || role == "Lecturer")
                 {
-                    <div class="nav-section-label">Department</div>
+                    <div class="nav-section-label">Phòng ban</div>
                     <ul>
                         @if (role == "Manager")
                         {
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('members')"><span class="nav-icon">◉</span><span class="nav-text">Nhan vien</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('members')"><span class="nav-icon">◉</span><span class="nav-text">Nhân viên</span></a></li>
                         }
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khoa hoc</span></a></li>
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bai thi</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khóa học</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bài thi</span></a></li>
                         @if (role == "Manager")
                         {
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('assignments')"><span class="nav-icon">↗</span><span class="nav-text">Phan cong</span></a></li>
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('staff-progress')"><span class="nav-icon">◔</span><span class="nav-text">Tien do</span></a></li>
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('hr-notifications')"><span class="nav-icon">&#128276;</span><span class="nav-text">Thong bao</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('assignments')"><span class="nav-icon">↗</span><span class="nav-text">Phân công</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('staff-progress')"><span class="nav-icon">◔</span><span class="nav-text">Tiến độ</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('hr-notifications')"><span class="nav-icon">&#128276;</span><span class="nav-text">Thông báo</span></a></li>
                             @if (deptName == "Trung tâm Đào tạo Nội bộ")
                             {
-                                <li class="nav-item"><a class="nav-link" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phe duyet</span></a></li>
+                                <li class="nav-item"><a class="nav-link" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phê duyệt</span></a></li>
                             }
                         }
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tai lieu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tài liệu</span></a></li>
                     </ul>
                 }
 
                 @if (role == "IT")
                 {
-                    <div class="nav-section-label">Admin</div>
+                    <div class="nav-section-label">Quản trị</div>
                     <ul>
-                        <li class="nav-item"><a class="nav-link" data-permission="users.manage" data-nav-page="users" onclick="navigate('users')"><span class="nav-icon">◉</span><span class="nav-text">Nguoi dung</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="departments.manage" data-nav-page="departments" onclick="navigate('departments')"><span class="nav-icon">⌘</span><span class="nav-text">Phong ban</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="courses" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khoa hoc</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="exams" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bai thi</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="categories.manage" data-nav-page="categories" onclick="navigate('categories')"><span class="nav-icon">◇</span><span class="nav-text">Danh muc</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="users.manage" data-nav-page="users" onclick="navigate('users')"><span class="nav-icon">◉</span><span class="nav-text">Người dùng</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="departments.manage" data-nav-page="departments" onclick="navigate('departments')"><span class="nav-icon">⌘</span><span class="nav-text">Phòng ban</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="courses" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khóa học</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="exams" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bài thi</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="categories.manage" data-nav-page="categories" onclick="navigate('categories')"><span class="nav-icon">◇</span><span class="nav-text">Danh mục</span></a></li>
                         <li class="nav-item"><a class="nav-link" data-permission="faqs.manage" data-nav-page="faqs" onclick="navigate('faqs')"><span class="nav-icon">?</span><span class="nav-text">FAQ</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="content.documents.manage" data-nav-page="documents" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tai lieu</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-nav-page="approvals" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phe duyet</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="content.documents.manage" data-nav-page="documents" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tài liệu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-nav-page="approvals" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phê duyệt</span></a></li>
                     </ul>
 
-                    <div class="nav-section-label">Operations</div>
+                    <div class="nav-section-label">Vận hành</div>
                     <ul>
-                        <li class="nav-item"><a class="nav-link" data-permission="analytics.view" data-nav-page="analytics" onclick="navigate('analytics')"><span class="nav-icon">◔</span><span class="nav-text">Phan tich</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="auditlogs.view" data-nav-page="auditlogs" onclick="navigate('auditlogs')"><span class="nav-icon">☰</span><span class="nav-text">Audit logs</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="backup.manage" data-nav-page="backup" onclick="navigate('backup')"><span class="nav-icon">⎘</span><span class="nav-text">Backup</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="newsletter.manage" data-nav-page="newsletter" onclick="navigate('newsletter')"><span class="nav-icon">✦</span><span class="nav-text">Notifications</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="settings.manage" data-nav-page="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span><span class="nav-text">Settings</span></a></li>
-                    </ul>
-
-                    <div class="nav-section-label">Future Roles</div>
-                    <ul>
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('permissions')"><span class="nav-icon">✦</span><span class="nav-text">Admin hub</span></a></li>
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('courses')"><span class="nav-icon">✎</span><span class="nav-text">Instructor flow</span></a></li>
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('backup')"><span class="nav-icon">⚙</span><span class="nav-text">System center</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="analytics.view" data-nav-page="analytics" onclick="navigate('analytics')"><span class="nav-icon">◔</span><span class="nav-text">Phân tích</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="auditlogs.view" data-nav-page="auditlogs" onclick="navigate('auditlogs')"><span class="nav-icon">☰</span><span class="nav-text">Nhật ký hệ thống</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="backup.manage" data-nav-page="backup" onclick="navigate('backup')"><span class="nav-icon">⎘</span><span class="nav-text">Sao lưu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="newsletter.manage" data-nav-page="newsletter" onclick="navigate('newsletter')"><span class="nav-icon">✦</span><span class="nav-text">Thông báo hệ thống</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="settings.manage" data-nav-page="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span><span class="nav-text">Cài đặt</span></a></li>
                     </ul>
                 }
 
-                <div class="nav-section-label">Account</div>
+                <div class="nav-section-label">Tài khoản</div>
                 <ul>
                     <li class="nav-item">
                         <a class="nav-link" href="/Auth/Logout">
                             <span class="nav-icon">↩</span>
-                            <span class="nav-text">Dang xuat</span>
+                            <span class="nav-text">Đăng xuất</span>
                         </a>
                     </li>
                 </ul>
 
-                <div class="nav-section-label">Preferences</div>
+                <div class="nav-section-label">Tùy chọn</div>
                 <ul>
                     <li class="nav-item">
                         <button id="themeToggleBtn" type="button" class="nav-link" onclick="toggleTheme()">
                             <span class="nav-icon">☀</span>
-                            <span class="nav-text">Theme</span>
+                            <span class="nav-text">Giao diện</span>
                         </button>
                     </li>
                 </ul>
             </nav>
+
 
         </aside>
 

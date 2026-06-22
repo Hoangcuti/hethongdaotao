@@ -1,0 +1,28 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPS/
+[Rr]elease/
+[Rr]eleasePS/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Ob]j/
+[Log]s/
+tempobj/
+tempbuild_verify/
+
+# Node modules
+node_modules/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Nested empty git repo folder
+hethongdaotaonoibo/

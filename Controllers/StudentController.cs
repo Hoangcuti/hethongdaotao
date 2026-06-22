@@ -286,51 +286,10 @@ public class StudentController : Controller
         // Check sequential chapter locks
         if (exam.ModuleId.HasValue && effectiveCourseId > 0)
         {
-            var modulesList = await _db.CourseModules
-                .Where(m => m.CourseId == effectiveCourseId)
-                .OrderBy(m => m.SortOrder)
-                .ToListAsync();
-            
-            var currentMod = modulesList.FirstOrDefault(m => m.ModuleId == exam.ModuleId.Value);
-            if (currentMod != null)
+            var lockCheck = await CheckSequentialModuleLockAsync(effectiveCourseId, exam.ModuleId.Value, userId);
+            if (lockCheck.IsLocked)
             {
-                var courseExams = await _db.Exams
-                    .Where(e => e.CourseId == effectiveCourseId)
-                    .ToListAsync();
-
-                var courseExamIds = courseExams.Select(ce => ce.ExamId).ToList();
-
-                var userExams = await _db.UserExams
-                    .Where(ue => ue.UserId == userId && ue.IsFinish == true && ue.ExamId.HasValue && courseExamIds.Contains(ue.ExamId.Value))
-                    .ToListAsync();
-
-                bool isLocked = false;
-                var currentIndex = modulesList.IndexOf(currentMod);
-                for (int j = 0; j < currentIndex; j++)
-                {
-                    var prevMod = modulesList[j];
-                    var prevModExam = courseExams.FirstOrDefault(e => e.ModuleId == prevMod.ModuleId);
-                    if (prevModExam != null)
-                    {
-                        var bestScore = userExams
-                            .Where(ue => ue.ExamId == prevModExam.ExamId)
-                            .Select(ue => ue.Score ?? 0)
-                            .DefaultIfEmpty(0m)
-                            .Max();
-                        
-                        var passScore = prevModExam.PassScore ?? 50m;
-                        if (bestScore < passScore)
-                        {
-                            isLocked = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isLocked)
-                {
-                    return RedirectToAction("Learn", "Student", new { courseId = effectiveCourseId });
-                }
+                return RedirectToAction("Learn", "Student", new { courseId = effectiveCourseId });
             }
         }
 
@@ -722,55 +681,10 @@ public class StudentController : Controller
             // Check if the exam's module is locked
             if (exam.ModuleId.HasValue && exam.CourseId.HasValue)
             {
-                var courseId = exam.CourseId.Value;
-                var modulesList = await _db.CourseModules
-                    .Where(m => m.CourseId == courseId)
-                    .OrderBy(m => m.SortOrder)
-                    .ToListAsync();
-                
-                var currentMod = modulesList.FirstOrDefault(m => m.ModuleId == exam.ModuleId.Value);
-                if (currentMod != null)
+                var lockCheck = await CheckSequentialModuleLockAsync(exam.CourseId.Value, exam.ModuleId.Value, userId);
+                if (lockCheck.IsLocked)
                 {
-                    var courseExams = await _db.Exams
-                        .Where(e => e.CourseId == courseId)
-                        .ToListAsync();
-
-                    var courseExamIds = courseExams.Select(ce => ce.ExamId).ToList();
-
-                    var userExams = await _db.UserExams
-                        .Where(ue => ue.UserId == userId && ue.IsFinish == true && ue.ExamId.HasValue && courseExamIds.Contains(ue.ExamId.Value))
-                        .ToListAsync();
-
-                    bool isLocked = false;
-                    string lockReason = "";
-                    
-                    var currentIndex = modulesList.IndexOf(currentMod);
-                    for (int j = 0; j < currentIndex; j++)
-                    {
-                        var prevMod = modulesList[j];
-                        var prevModExam = courseExams.FirstOrDefault(e => e.ModuleId == prevMod.ModuleId);
-                        if (prevModExam != null)
-                        {
-                            var bestScore = userExams
-                                .Where(ue => ue.ExamId == prevModExam.ExamId)
-                                .Select(ue => ue.Score ?? 0)
-                                .DefaultIfEmpty(0m)
-                                .Max();
-                            
-                            var passScore = prevModExam.PassScore ?? 50m;
-                            if (bestScore < passScore)
-                            {
-                                isLocked = true;
-                                lockReason = $"Cần hoàn thành bài thi '{prevModExam.ExamTitle}' của chương trước đạt {passScore}%";
-                                break;
-                            }
-                        }
-                    }
-
-                    if (isLocked)
-                    {
-                        return BadRequest(new { error = lockReason });
-                    }
+                    return BadRequest(new { error = lockCheck.Reason });
                 }
             }
 
@@ -1908,15 +1822,9 @@ public class StudentController : Controller
                     userPoint.LastUpdated = DateTime.Now;
                 }
 
-                // 3. Gửi thông báo (Sử dụng các trường hiện có trong DB của bạn)
-                int nextNotifId = 1;
-                if (await _db.Notifications.AnyAsync())
-                {
-                    nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                }
+                // 3. Gửi thông báo cho học viên
                 _db.Notifications.Add(new Notification
                 {
-                    Id = nextNotifId,
                     UserId = userId,
                     Title = $"Chúc mừng! Bạn đã hoàn thành khóa học và được cấp chứng chỉ mới.",
                     IsRead = false
@@ -2083,6 +1991,51 @@ public class StudentController : Controller
             return $"https://drive.google.com/uc?export=download&id={fileId}";
         }
         return url;
+    }
+
+    private async Task<(bool IsLocked, string Reason)> CheckSequentialModuleLockAsync(int courseId, int moduleId, int? userId)
+    {
+        var modulesList = await _db.CourseModules
+            .Where(m => m.CourseId == courseId)
+            .OrderBy(m => m.SortOrder)
+            .ToListAsync();
+        
+        var currentMod = modulesList.FirstOrDefault(m => m.ModuleId == moduleId);
+        if (currentMod == null) return (false, "");
+
+        var currentIndex = modulesList.IndexOf(currentMod);
+        if (currentIndex <= 0) return (false, ""); // First module is never locked
+
+        var courseExams = await _db.Exams
+            .Where(e => e.CourseId == courseId)
+            .ToListAsync();
+
+        var courseExamIds = courseExams.Select(ce => ce.ExamId).ToList();
+
+        var userExams = await _db.UserExams
+            .Where(ue => ue.UserId == userId && ue.IsFinish == true && ue.ExamId.HasValue && courseExamIds.Contains(ue.ExamId.Value))
+            .ToListAsync();
+
+        for (int j = 0; j < currentIndex; j++)
+        {
+            var prevMod = modulesList[j];
+            var prevModExam = courseExams.FirstOrDefault(e => e.ModuleId == prevMod.ModuleId);
+            if (prevModExam != null)
+            {
+                var bestScore = userExams
+                    .Where(ue => ue.ExamId == prevModExam.ExamId)
+                    .Select(ue => ue.Score ?? 0)
+                    .DefaultIfEmpty(0m)
+                    .Max();
+                
+                var passScore = prevModExam.PassScore ?? 50m;
+                if (bestScore < passScore)
+                {
+                    return (true, $"Bạn chưa hoàn thành bài thi '{prevModExam.ExamTitle}' của chương trước (cần đạt {passScore}%).");
+                }
+            }
+        }
+        return (false, "");
     }
 }
 

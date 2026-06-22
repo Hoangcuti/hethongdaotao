@@ -111,7 +111,7 @@ public class HRController : Controller
         if (auth != null) return auth;
 
         int deptId = GetCurrentDeptId();
-        var query = _db.Users.Where(u => u.Status == "Active");
+        var query = _db.Users.AsNoTracking().Where(u => u.Status == "Active");
         if (deptId > 0) query = query.Where(u => u.DepartmentId == deptId);
 
         var totalEmployees = await query.CountAsync();
@@ -170,7 +170,7 @@ public class HRController : Controller
         if (auth != null) return auth;
 
         int deptId = GetCurrentDeptId();
-        var query = _db.TrainingAssignments
+        var query = _db.TrainingAssignments.AsNoTracking()
             .Include(ta => ta.User)
                 .ThenInclude(u => u!.Department)
             .Include(ta => ta.Course)
@@ -315,7 +315,7 @@ public class HRController : Controller
         var auth = RequireDepartmentManagerApi();
         if (auth != null) return auth;
 
-        var query = _db.UserSkills
+        var query = _db.UserSkills.AsNoTracking()
             .Include(us => us.User)
                 .ThenInclude(u => u.Department)
             .Include(us => us.Skill)
@@ -380,7 +380,7 @@ public class HRController : Controller
 
         int currentDeptId = GetCurrentDeptId();
         int currentUserId = GetCurrentUserId();
-        var query = _db.Users
+        var query = _db.Users.AsNoTracking()
             .Include(u => u.Department)
             .Where(u => u.UserId != currentUserId)
             .AsQueryable();
@@ -575,15 +575,8 @@ public class HRController : Controller
         {
             notifTitle = notifTitle.Substring(0, 252) + "...";
         }
-        int nextNotifId = 1;
-        if (await _db.Notifications.AnyAsync())
-        {
-            nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-        }
-
         var notification = new Notification
         {
-            Id = nextNotifId,
             UserId = assignment.UserId,
             Title = notifTitle,
             IsRead = false
@@ -637,7 +630,7 @@ public class HRController : Controller
         var currentDept = await _db.Departments.FindAsync(deptId);
         bool isTrainingCenter = currentDept?.DepartmentName == "Trung tâm Đào tạo Nội bộ";
 
-        var query = _db.Courses.Where(c => c.Status != "Deleted");
+        var query = _db.Courses.AsNoTracking().Where(c => c.Status != "Deleted");
         if (!isTrainingCenter)
         {
             query = query.Where(c => c.IsForAllDepartments == true 
@@ -1117,15 +1110,8 @@ public class HRController : Controller
                         notifTitle = notifTitle.Substring(0, 252) + "...";
                     }
 
-                    int nextNotifId = 1;
-                    if (await _db.Notifications.AnyAsync())
-                    {
-                        nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                    }
-
                     var notification = new Notification
                     {
-                        Id = nextNotifId,
                         UserId = trainingDept.ManagerId.Value,
                         Title = notifTitle,
                         IsRead = false
@@ -1783,15 +1769,8 @@ public class HRController : Controller
         var user = await _db.Users.FindAsync(dto.UserId);
         if (user == null) return NotFound();
 
-        int nextNotifId = 1;
-        if (await _db.Notifications.AnyAsync())
-        {
-            nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-        }
-
         var notification = new Notification
         {
-            Id = nextNotifId,
             UserId = dto.UserId,
             Title = "Nhắc nhở học tập: " + dto.Message,
             IsRead = false
@@ -2653,17 +2632,10 @@ public class HRController : Controller
                                         (exam.EndDate.HasValue ? $" đến {exam.EndDate.Value.ToString("dd/MM/yyyy HH:mm")}." : ".");
                     if (notifTitle.Length > 255) notifTitle = notifTitle.Substring(0, 252) + "...";
 
-                    int nextNotifId = 1;
-                    if (await _db.Notifications.AnyAsync())
-                    {
-                        nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                    }
-
                     foreach (var uid in targetUserIds)
                     {
                         _db.Notifications.Add(new Notification
                         {
-                            Id = nextNotifId++,
                             UserId = uid,
                             Title = notifTitle,
                             IsRead = false
@@ -2990,8 +2962,8 @@ public class HRController : Controller
     }
 
     [HttpPost("/api/hr/modules/{moduleId}/lessons")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024L * 1024L * 1024L)]
-    [RequestSizeLimit(1024L * 1024L * 1024L)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500L * 1024L * 1024L)]
+    [RequestSizeLimit(500L * 1024L * 1024L)]
     public async Task<IActionResult> CreateLesson(int moduleId)
     {
         var auth = RequireManager();
@@ -3028,8 +3000,8 @@ public class HRController : Controller
     }
 
     [HttpPut("/api/hr/lessons/{lessonId}")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024L * 1024L * 1024L)]
-    [RequestSizeLimit(1024L * 1024L * 1024L)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500L * 1024L * 1024L)]
+    [RequestSizeLimit(500L * 1024L * 1024L)]
     public async Task<IActionResult> UpdateLesson(int lessonId)
     {
         try
@@ -3733,15 +3705,8 @@ public class HRController : Controller
                     notifTitle = notifTitle.Substring(0, 252) + "...";
                 }
 
-                int nextNotifId = 1;
-                if (await _db.Notifications.AnyAsync())
-                {
-                    nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                }
-
                 var notification = new Notification
                 {
-                    Id = nextNotifId,
                     UserId = proposerId.Value,
                     Title = notifTitle,
                     IsRead = false
@@ -3784,15 +3749,8 @@ public class HRController : Controller
                     notifTitle = notifTitle.Substring(0, 252) + "...";
                 }
 
-                int nextNotifId = 1;
-                if (await _db.Notifications.AnyAsync())
-                {
-                    nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                }
-
                 var notification = new Notification
                 {
-                    Id = nextNotifId,
                     UserId = proposerId.Value,
                     Title = notifTitle,
                     IsRead = false
