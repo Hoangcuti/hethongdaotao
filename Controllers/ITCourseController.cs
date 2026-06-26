@@ -440,8 +440,8 @@ public partial class ITController : Controller
         return Ok(new { success = true });
     }
     [HttpPost("/api/it/lessons")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024L * 1024L * 1024L)]
-    [RequestSizeLimit(1024L * 1024L * 1024L)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500L * 1024L * 1024L)]
+    [RequestSizeLimit(500L * 1024L * 1024L)]
     public async Task<IActionResult> CreateLesson()
     {
         // Validation and error handling for mixed lesson sources.
@@ -476,8 +476,8 @@ public partial class ITController : Controller
         return Ok(new { success = true, id = lesson.LessonId, videoUrl = lesson.VideoUrl, contentType = lesson.ContentType });
     }
     [HttpPost("/api/it/modules/{moduleId}/lessons")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024L * 1024L * 1024L)]
-    [RequestSizeLimit(1024L * 1024L * 1024L)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500L * 1024L * 1024L)]
+    [RequestSizeLimit(500L * 1024L * 1024L)]
     public async Task<IActionResult> CreateLesson(int moduleId)
     {
         var auth = RequireIT();
@@ -512,6 +512,14 @@ public partial class ITController : Controller
         await _db.SaveChangesAsync();
         return Ok(new { success = true, id = lesson.LessonId, videoUrl = lesson.VideoUrl, contentType = lesson.ContentType });
     }
+    // Danh sách extension được phép tải lên (whitelist bảo mật)
+    private static readonly HashSet<string> AllowedAttachmentExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
+        ".txt", ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".mp3", ".zip"
+    };
+    private const long MaxAttachmentSizeBytes = 100L * 1024L * 1024L; // 100MB cho tài liệu đính kèm
+
     [HttpPost("/api/it/lessons/{lessonId}/attachments/upload")]
     public async Task<IActionResult> UploadLessonAttachment(int lessonId, IFormFile? file)
     {
@@ -523,12 +531,22 @@ public partial class ITController : Controller
         if (file == null || file.Length == 0)
             return BadRequest(new { error = "Bạn chưa chọn file tài liệu." });
 
+        // Kiểm tra extension hợp lệ (bảo mật – ngăn upload file thực thi)
+        var ext = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(ext) || !AllowedAttachmentExtensions.Contains(ext))
+            return BadRequest(new { error = $"Loại file '{ext}' không được phép tải lên. Chỉ chấp nhận: pdf, doc, docx, ppt, pptx, xls, xlsx, txt, jpg, png, mp4, mp3, zip." });
+
+        // Kiểm tra kích thước tài liệu đính kèm tối đa 100MB
+        if (file.Length > MaxAttachmentSizeBytes)
+            return BadRequest(new { error = "File tài liệu đính kèm không được vượt quá 100MB. Dùng video upload cho file lớn hơn." });
+
         var lesson = await _db.Lessons.FindAsync(lessonId);
         if (lesson == null) return NotFound(new { error = "Không tìm thấy bài học." });
 
         var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "lessons", lessonId.ToString());
         Directory.CreateDirectory(uploadsRoot);
 
+        // Tên file an toàn: thêm timestamp + chỉ giữ tên file, bỏ path traversal
         var safeFileName = $"{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
         var fullPath = Path.Combine(uploadsRoot, safeFileName);
 
@@ -912,8 +930,8 @@ public partial class ITController : Controller
     // API: LESSON - UPDATE
     // ============================================================
     [HttpPut("/api/it/lessons/{lessonId}")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024L * 1024L * 1024L)]
-    [RequestSizeLimit(1024L * 1024L * 1024L)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 500L * 1024L * 1024L)]
+    [RequestSizeLimit(500L * 1024L * 1024L)]
     public async Task<IActionResult> UpdateLesson(int lessonId)
     {
         try
@@ -1992,35 +2010,7 @@ public partial class ITController : Controller
         try
         {
             byte[] fileBytes = Convert.FromBase64String(dto.Base64Data);
-            string wordText = "";
-
-            using (var ms = new System.IO.MemoryStream(fileBytes))
-            {
-                using (var doc = Xceed.Words.NET.DocX.Load(ms))
-                {
-                    var linesList = new List<string>();
-                    foreach (var p in doc.Paragraphs)
-                    {
-                        var t = p.Text.Trim();
-                        if (!string.IsNullOrEmpty(t)) linesList.Add(t);
-                    }
-                    foreach (var table in doc.Tables)
-                    {
-                        foreach (var row in table.Rows)
-                        {
-                            foreach (var cell in row.Cells)
-                            {
-                                foreach (var p in cell.Paragraphs)
-                                {
-                                    var t = p.Text.Trim();
-                                    if (!string.IsNullOrEmpty(t)) linesList.Add(t);
-                                }
-                            }
-                        }
-                    }
-                    wordText = string.Join("\n", linesList);
-                }
-            }
+            string wordText = KhoaHoc.Helpers.DocxExtractor.ExtractText(fileBytes);
 
             if (string.IsNullOrWhiteSpace(wordText))
             {

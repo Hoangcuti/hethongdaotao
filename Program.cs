@@ -39,12 +39,12 @@ builder.Services.AddScoped<KhoaHoc.BusinessLogicLayer.Services.IStudentService, 
 builder.Services.AddControllersWithViews();
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 10L * 1024L * 1024L * 1024L; // 10GB
+    options.Limits.MaxRequestBodySize = 500L * 1024L * 1024L; // 500MB – đủ cho video bài giảng
 });
 
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 10L * 1024L * 1024L * 1024L; // 10GB
+    options.MultipartBodyLengthLimit = 500L * 1024L * 1024L; // 500MB
 });
 
 var keysPath = Path.Combine(builder.Environment.WebRootPath ?? builder.Environment.ContentRootPath, "App_Data", "Keys");

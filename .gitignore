@@ -1,0 +1,10 @@
+[Ob]
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+tempbuild_verify/
+hethongdaotaonoibo/

@@ -988,15 +988,8 @@ public partial class ITController : Controller
                     notifTitle = notifTitle.Substring(0, 252) + "...";
                 }
 
-                int nextNotifId = 1;
-                if (await _db.Notifications.AnyAsync())
-                {
-                    nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                }
-
                 var notification = new Notification
                 {
-                    Id = nextNotifId,
                     UserId = proposerId.Value,
                     Title = notifTitle,
                     IsRead = false
@@ -1038,15 +1031,8 @@ public partial class ITController : Controller
                     notifTitle = notifTitle.Substring(0, 252) + "...";
                 }
 
-                int nextNotifId = 1;
-                if (await _db.Notifications.AnyAsync())
-                {
-                    nextNotifId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
-                }
-
                 var notification = new Notification
                 {
-                    Id = nextNotifId,
                     UserId = proposerId.Value,
                     Title = notifTitle,
                     IsRead = false

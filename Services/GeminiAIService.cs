@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Linq;
-using Xceed.Words.NET;
+using KhoaHoc.Helpers;
 using ClosedXML.Excel;
 
 namespace KhoaHoc.Services;
@@ -272,39 +272,12 @@ Lưu ý:
             // 1. First try to extract as a Word (.docx) document
             try
             {
-                using (var ms = new MemoryStream(fileBytes))
+                var text = DocxExtractor.ExtractText(fileBytes);
+                if (!string.IsNullOrEmpty(text))
                 {
-                    using (var docxDoc = DocX.Load(ms))
-                    {
-                        var sb = new StringBuilder();
-                        foreach (var p in docxDoc.Paragraphs)
-                        {
-                            var t = p.Text.Trim();
-                            if (!string.IsNullOrEmpty(t)) sb.AppendLine(t);
-                        }
-                        foreach (var table in docxDoc.Tables)
-                        {
-                            foreach (var row in table.Rows)
-                            {
-                                var cellTexts = new List<string>();
-                                foreach (var cell in row.Cells)
-                                {
-                                    var cellSb = new StringBuilder();
-                                    foreach (var p in cell.Paragraphs)
-                                    {
-                                        var pt = p.Text.Trim();
-                                        if (!string.IsNullOrEmpty(pt)) cellSb.Append(pt + " ");
-                                    }
-                                    var cellT = cellSb.ToString().Trim();
-                                    if (!string.IsNullOrEmpty(cellT)) cellTexts.Add(cellT);
-                                }
-                                if (cellTexts.Any()) sb.AppendLine(string.Join(" | ", cellTexts));
-                            }
-                        }
-                        extractedText = sb.ToString();
-                        isExtractedText = true;
-                        _logger.LogInformation("Successfully extracted text as a Word document.");
-                    }
+                    extractedText = text;
+                    isExtractedText = true;
+                    _logger.LogInformation("Successfully extracted text as a Word document using DocxExtractor.");
                 }
             }
             catch (Exception ex)
