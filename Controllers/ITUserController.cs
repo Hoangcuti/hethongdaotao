@@ -84,6 +84,16 @@ public partial class ITController : Controller
         if (await _db.Users.AnyAsync(u => u.Username == dto.Username))
             return BadRequest(new { error = "Username đã tồn tại." });
 
+        // Kiểm tra mã nhân viên trùng
+        if (!string.IsNullOrWhiteSpace(dto.EmployeeCode))
+        {
+            var normalizedEmpCode = dto.EmployeeCode.Trim().ToUpper();
+            if (await _db.Users.AnyAsync(u => u.EmployeeCode != null && u.EmployeeCode.ToUpper() == normalizedEmpCode))
+            {
+                return BadRequest(new { error = "Mã nhân viên đã tồn tại trên hệ thống. Vui lòng kiểm tra lại." });
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(dto.FullName))
         {
             foreach (var c in dto.FullName)
@@ -208,58 +218,62 @@ public partial class ITController : Controller
 
         if (user == null) return NotFound();
 
-        using var transaction = await _db.Database.BeginTransactionAsync();
-        try {
-            // 1. Xóa các dữ liệu học tập & đánh giá (Sử dụng SQL trực tiếp để tối ưu hiệu suất)
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserAnswers WHERE UserExamID IN (SELECT UserExamID FROM UserExams WHERE UserID = {0})", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM QuizSessionStates WHERE UserExamID IN (SELECT UserExamID FROM UserExams WHERE UserID = {0})", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserExams WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM Enrollments WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM TrainingAssignments WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserLessonLogs WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserRoles WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserPermissions WHERE UserID = {0}", id);
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
+        {
+            using var transaction = await _db.Database.BeginTransactionAsync();
+            try {
+                // 1. Xóa các dữ liệu học tập & đánh giá (Sử dụng SQL trực tiếp để tối ưu hiệu suất)
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserAnswers WHERE UserExamID IN (SELECT UserExamID FROM UserExams WHERE UserID = {0})", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM QuizSessionStates WHERE UserExamID IN (SELECT UserExamID FROM UserExams WHERE UserID = {0})", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserExams WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM Enrollments WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM TrainingAssignments WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserLessonLogs WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserRoles WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserPermissions WHERE UserID = {0}", id);
 
-            // 2. Xóa các thành tích & dữ liệu phụ trợ
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM AttendanceLogs WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM Certificates WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserBadges WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserSkills WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM SurveyResults WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserPoints WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM NewsletterSubscriptions WHERE UserID = {0}", id);
+                // 2. Xóa các thành tích & dữ liệu phụ trợ
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM AttendanceLogs WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM Certificates WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserBadges WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserSkills WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM SurveyResults WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserPoints WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM NewsletterSubscriptions WHERE UserID = {0}", id);
 
-            // 3. Xử lý các liên kết lịch sử (Chuyển sang NULL để bảo toàn tính toàn vẹn)
-            await _db.Database.ExecuteSqlRawAsync("UPDATE Courses SET CreatedBy = NULL WHERE CreatedBy = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("UPDATE AuditLogs SET UserID = NULL WHERE UserID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("UPDATE TrainingAssignments SET AssignedBy = NULL WHERE AssignedBy = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET EmployeeID = NULL WHERE EmployeeID = {0}", id);
-            await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET ActionBy = NULL WHERE ActionBy = {0}", id);
+                // 3. Xử lý các liên kết lịch sử (Chuyển sang NULL để bảo toàn tính toàn vẹn)
+                await _db.Database.ExecuteSqlRawAsync("UPDATE Courses SET CreatedBy = NULL WHERE CreatedBy = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("UPDATE AuditLogs SET UserID = NULL WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("UPDATE TrainingAssignments SET AssignedBy = NULL WHERE AssignedBy = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET EmployeeID = NULL WHERE EmployeeID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET ActionBy = NULL WHERE ActionBy = {0}", id);
 
-            // 4. Xóa chính User
-            await _db.Database.ExecuteSqlRawAsync("DELETE FROM Users WHERE UserID = {0}", id);
+                // 4. Xóa chính User
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM Users WHERE UserID = {0}", id);
 
-            // 5. Ghi AuditLog hoạt động xóa (của người thực hiện xóa)
-            var currentUserIdStr = HttpContext.Session.GetString("UserID");
-            var currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
-            _db.AuditLogs.Add(new AuditLog
-            {
-                UserId = currentUserId,
-                ActionType = "DELETE",
-                TableName = "Users",
-                Description = $"Xóa vĩnh viễn tài khoản: {user.Username} (ID: {id})",
-                Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-                CreatedAt = DateTime.Now
-            });
-            await _db.SaveChangesAsync();
+                // 5. Ghi AuditLog hoạt động xóa (của người thực hiện xóa)
+                var currentUserIdStr = HttpContext.Session.GetString("UserID");
+                var currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
+                _db.AuditLogs.Add(new AuditLog
+                {
+                    UserId = currentUserId,
+                    ActionType = "DELETE",
+                    TableName = "Users",
+                    Description = $"Xóa vĩnh viễn tài khoản: {user.Username} (ID: {id})",
+                    Ipaddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    CreatedAt = DateTime.Now
+                });
+                await _db.SaveChangesAsync();
 
-            await transaction.CommitAsync();
-            return Ok(new { success = true });
-        } catch (Exception ex) {
-            await transaction.RollbackAsync();
-            var inner = ex.InnerException != null ? $"\nChi tiết: {ex.InnerException.Message}" : "";
-            return StatusCode(500, new { error = "Lỗi khi xóa tài khoản: " + ex.Message + inner });
-        }
+                await transaction.CommitAsync();
+                return Ok(new { success = true });
+            } catch (Exception ex) {
+                await transaction.RollbackAsync();
+                var inner = ex.InnerException != null ? $"\nChi tiết: {ex.InnerException.Message}" : "";
+                return StatusCode(500, new { error = "Lỗi khi xóa tài khoản: " + ex.Message + inner });
+            }
+        });
     }
     [HttpGet("/api/it/roles")]
     public async Task<IActionResult> GetRoles()

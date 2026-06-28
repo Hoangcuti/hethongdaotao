@@ -1401,6 +1401,28 @@ function onNewEmployeeCodeInput() {
     }
 }
 
+function openCreateUserModal() {
+    const uEl = document.getElementById('newUsername');
+    const pEl = document.getElementById('newPassword');
+    const fEl = document.getElementById('newFullName');
+    const eEl = document.getElementById('newEmployeeCode');
+    const mEl = document.getElementById('newEmail');
+    const dEl = document.getElementById('newDepartment');
+
+    if (uEl) uEl.value = '';
+    if (pEl) pEl.value = '';
+    if (fEl) fEl.value = '';
+    if (eEl) eEl.value = '';
+    if (mEl) mEl.value = '';
+    if (dEl) {
+        dEl.selectedIndex = 0;
+    }
+
+    onNewDepartmentChange();
+
+    openModal('createUserModal');
+}
+
 async function submitCreateUser() {
     const uEl = document.getElementById('newUsername');
     const pEl = document.getElementById('newPassword');
