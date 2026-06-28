@@ -779,7 +779,10 @@ async function submitLibraryExam() {
 
     } catch (e) {
         console.error('CRITICAL ERROR in submitLibraryExam:', e);
-        showToast('Lỗi khi lưu bài quiz: ' + (e.message || 'Lỗi không xác định'), 'error', { persistent: true });
+        let msg = e.message || 'Lỗi không xác định';
+        msg = msg.replace(/^Không thể tạo:\s*/i, '');
+        msg = msg.replace(/Tiêu đề quiz/i, 'Tiêu đề bài kiểm tra');
+        showToast(msg, 'error', { title: 'Không thể lưu', persistent: true });
     } finally {
         if (btn) {
             btn.disabled = false;
