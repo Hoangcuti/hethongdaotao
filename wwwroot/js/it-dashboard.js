@@ -4066,22 +4066,6 @@ async function suggestQuestionWithAI() {
 // ============================================================
 // AI GENERATION (GEMINI)
 // ============================================================
-async function generateModuleWithAI(source) {
-    const courseId = currentContentCourseId;
-    if (!courseId) return showToast('Hãy chọn khóa học trước', 'warning');
-
-    showToast('AI đang phân tích và gợi ý chương học...', 'info');
-    try {
-        const data = await apiFetch('/api/it/generate-modules-ai', {
-            method: 'POST',
-            body: JSON.stringify({ courseId })
-        });
-        showToast('AI đã gợi ý xong! Đang cập nhật cấu trúc...', 'success');
-        loadCourseContent();
-    } catch (e) {
-        showToast('Lỗi AI: ' + e.message, 'error');
-    }
-}
 
 async function generateLessonWithAI(lessonId) {
     showToast('AI đang soạn thảo nội dung bài giảng...', 'info');
