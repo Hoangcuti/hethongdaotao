@@ -84,6 +84,17 @@ public partial class ITController : Controller
         if (await _db.Users.AnyAsync(u => u.Username == dto.Username))
             return BadRequest(new { error = "Username đã tồn tại." });
 
+        if (!string.IsNullOrWhiteSpace(dto.FullName))
+        {
+            foreach (var c in dto.FullName)
+            {
+                if (!char.IsLetter(c) && !char.IsWhiteSpace(c))
+                {
+                    return BadRequest(new { error = "Họ và tên không được chứa số hoặc ký tự đặc biệt." });
+                }
+            }
+        }
+
         var passwordHash = SHA256.HashData(Encoding.UTF8.GetBytes(dto.Password));
 
         var user = new User
@@ -137,6 +148,17 @@ public partial class ITController : Controller
 
         var user = await _db.Users.FindAsync(id);
         if (user == null) return NotFound();
+
+        if (!string.IsNullOrWhiteSpace(dto.FullName))
+        {
+            foreach (var c in dto.FullName)
+            {
+                if (!char.IsLetter(c) && !char.IsWhiteSpace(c))
+                {
+                    return BadRequest(new { error = "Họ và tên không được chứa số hoặc ký tự đặc biệt." });
+                }
+            }
+        }
 
         // Chuẩn hóa email nếu có cập nhật
         if (!string.IsNullOrWhiteSpace(dto.Email))

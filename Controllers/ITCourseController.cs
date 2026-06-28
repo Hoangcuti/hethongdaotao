@@ -70,6 +70,11 @@ public partial class ITController : Controller
         if (string.IsNullOrWhiteSpace(dto.Title)) return BadRequest("Title is required");
         if (string.IsNullOrWhiteSpace(dto.CourseCode)) return BadRequest(new { error = "Mã khóa học là bắt buộc." });
 
+        if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.EndDate.Value <= dto.StartDate.Value)
+        {
+            return BadRequest(new { error = "Ngày kết thúc phải sau ngày bắt đầu." });
+        }
+
         var normalizedTitle = dto.Title.Trim().ToLower();
         var normalizedCode = dto.CourseCode.Trim().ToUpper();
         if (await _db.Courses.AnyAsync(c => c.Title != null && c.Title.ToLower() == normalizedTitle))
@@ -127,6 +132,11 @@ public partial class ITController : Controller
 
         var course = await _db.Courses.FindAsync(id);
         if (course == null) return NotFound();
+
+        if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.EndDate.Value <= dto.StartDate.Value)
+        {
+            return BadRequest(new { error = "Ngày kết thúc phải sau ngày bắt đầu." });
+        }
 
         var normalizedTitle = dto.Title?.Trim().ToLower();
         var normalizedCode = dto.CourseCode?.Trim().ToUpper();

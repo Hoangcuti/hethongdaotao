@@ -20,6 +20,17 @@ function showToast(msg, type = 'success', opts = {}) {
         return c;
     })();
 
+    // Avoid duplicate toast messages
+    if (container) {
+        const existingToasts = container.querySelectorAll('.toast');
+        for (const t of existingToasts) {
+            const msgEl = t.querySelector('.toast-message');
+            if (msgEl && msgEl.textContent === msg) {
+                return t;
+            }
+        }
+    }
+
     const icons = { success: '✓', error: '✕', warning: '!', info: 'i' };
     const titles = {
         success: 'Thành công',
@@ -33,7 +44,7 @@ function showToast(msg, type = 'success', opts = {}) {
     toast.innerHTML = `
         <span class="toast-icon">${icons[type] || 'i'}</span>
         <div class="toast-content">
-            <div class="toast-title">${escapeHtml(opts.title || titles[type] || 'Thong bao')}</div>
+            <div class="toast-title">${escapeHtml(opts.title || titles[type] || 'Thông báo')}</div>
             <div class="toast-message">${escapeHtml(msg)}</div>
         </div>
         <button type="button" class="toast-close" aria-label="Đóng">×</button>`;
@@ -101,14 +112,18 @@ async function apiFetch(url, options = {}, timeoutMs = 15000) {
 
         if (!res.ok) {
             let errorMsg = `Lỗi hệ thống (${res.status})`;
+            let errTitle = null;
             if (isJson) {
                 const errData = await res.json();
                 errorMsg = errData.error || errData.title || errorMsg;
+                errTitle = errData.title || null;
             } else {
                 const text = await res.text();
                 if (text && text.length < 300) errorMsg = text;
             }
-            throw new Error(errorMsg);
+            const error = new Error(errorMsg);
+            if (errTitle) error.title = errTitle;
+            throw error;
         }
 
         if (isJson) {
@@ -133,7 +148,7 @@ async function apiFetch(url, options = {}, timeoutMs = 15000) {
             throw timeoutErr;
         }
         console.error('API Error:', url, err.message);
-        showToast(err.message || 'Lỗi kết nối máy chủ', 'error');
+        showToast(err.message || 'Lỗi kết nối máy chủ', 'error', { title: err.title });
         throw err;
     }
 }
@@ -268,5 +283,89 @@ function initializeShell() {
         }
     });
 }
+
+function showConfirmModal(message, options = {}) {
+    return new Promise((resolve) => {
+        const id = 'dynamicConfirmModal';
+        let modal = document.getElementById(id);
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = id;
+            modal.className = 'modal-backdrop';
+            document.body.appendChild(modal);
+        }
+
+        const title = options.title || 'Xác nhận';
+        const confirmText = options.confirmText || 'Xác nhận';
+        const cancelText = options.cancelText || 'Hủy';
+        const isDanger = options.isDanger !== false;
+
+        modal.innerHTML = `
+            <div class="modal-box" style="max-width: 440px; padding: 24px; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);">
+                <div class="modal-header" style="border-bottom: none; padding: 0 0 12px 0; display: flex; align-items: center; justify-content: space-between;">
+                    <div class="modal-title" style="font-size: 1.2rem; font-weight: 600; color: var(--color-text);">${escapeHtml(title)}</div>
+                    <button class="modal-close" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid var(--border-color); background: var(--color-surface); color: var(--color-text-secondary); cursor: pointer;" id="confirmModalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 0 0 20px 0; color: var(--color-text-secondary); font-size: 0.95rem; line-height: 1.5;">
+                    ${escapeHtml(message).replace(/\n/g, '<br>')}
+                </div>
+                <div class="modal-footer" style="border-top: none; padding: 0; display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn btn-secondary" style="padding: 8px 16px; border-radius: var(--radius-xs); border: 1px solid var(--border-color); background: var(--color-surface); color: var(--color-text); font-weight: 500; cursor: pointer;" id="confirmModalCancelBtn">${escapeHtml(cancelText)}</button>
+                    <button class="btn ${isDanger ? 'btn-danger' : 'btn-primary'}" style="padding: 8px 16px; border-radius: var(--radius-xs); border: none; background: ${isDanger ? 'var(--color-danger)' : 'var(--color-primary)'}; color: white; font-weight: 500; cursor: pointer;" id="confirmModalConfirmBtn">${escapeHtml(confirmText)}</button>
+                </div>
+            </div>
+        `;
+
+        const onConfirm = () => {
+            closeModal(id);
+            resolve(true);
+        };
+
+        const onCancel = () => {
+            closeModal(id);
+            resolve(false);
+        };
+
+        document.getElementById('confirmModalConfirmBtn').addEventListener('click', onConfirm);
+        document.getElementById('confirmModalCancelBtn').addEventListener('click', onCancel);
+        document.getElementById('confirmModalCloseBtn').addEventListener('click', onCancel);
+
+        // Click on backdrop to close
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                onCancel();
+            }
+        };
+
+        openModal(id);
+    });
+}
+
+function handleCourseDateChange() {
+    const startDateEl = document.getElementById('courseModalStartDate');
+    const endDateEl = document.getElementById('courseModalEndDate');
+    const errorEl = document.getElementById('courseModalEndDateError');
+    if (startDateEl && endDateEl) {
+        endDateEl.min = startDateEl.value;
+        if (errorEl) {
+            if (startDateEl.value && endDateEl.value && endDateEl.value <= startDateEl.value) {
+                errorEl.textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+                errorEl.style.display = 'block';
+            } else {
+                errorEl.style.display = 'none';
+            }
+        }
+    }
+}
+document.addEventListener('change', (e) => {
+    if (e.target && (e.target.id === 'courseModalStartDate' || e.target.id === 'courseModalEndDate')) {
+        handleCourseDateChange();
+    }
+});
+document.addEventListener('input', (e) => {
+    if (e.target && (e.target.id === 'courseModalStartDate' || e.target.id === 'courseModalEndDate')) {
+        handleCourseDateChange();
+    }
+});
 
 

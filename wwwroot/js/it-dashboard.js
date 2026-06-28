@@ -1430,6 +1430,10 @@ async function submitCreateUser() {
     };
     if (!body.username) { showToast('Vui lòng nhập tên đăng nhập!', 'error'); return; }
     if (!body.fullName) { showToast('Vui lòng nhập họ và tên!', 'error'); return; }
+    if (!/^[\p{L}\s]+$/u.test(body.fullName)) {
+        showToast('Họ và tên không được chứa số hoặc ký tự đặc biệt.', 'error');
+        return;
+    }
     if (!body.email) { showToast('Vui lòng nhập email!', 'error'); return; }
 
     try {
@@ -1461,11 +1465,17 @@ async function submitEditUser() {
     const id = document.getElementById('editUserId').value;
     const dpId = parseInt(document.getElementById('editDepartment').value);
     const body = {
-        fullName: document.getElementById('editFullName').value,
+        fullName: document.getElementById('editFullName').value.trim(),
         status: document.getElementById('editStatus').value,
         departmentId: isNaN(dpId) ? null : dpId,
         newPassword: document.getElementById('editPassword').value || null
     };
+
+    if (!body.fullName) { showToast('Vui lòng nhập họ và tên!', 'error'); return; }
+    if (!/^[\p{L}\s]+$/u.test(body.fullName)) {
+        showToast('Họ và tên không được chứa số hoặc ký tự đặc biệt.', 'error');
+        return;
+    }
 
     try {
         await apiFetch(`/api/it/users/${id}`, { method: 'PUT', body: JSON.stringify(body) });
@@ -1525,7 +1535,13 @@ async function submitUserRoles() {
 }
 
 async function deleteUser(id, username) {
-    if (!confirm(`Bạn có chắc muốn vô hiệu hóa (xóa) tài khoản: ${username}?`)) return;
+    const ok = await showConfirmModal(`Bạn có chắc muốn vô hiệu hóa (xóa) tài khoản: ${username}?`, {
+        title: 'Xác nhận xóa tài khoản',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+        isDanger: true
+    });
+    if (!ok) return;
     try {
         await apiFetch(`/api/it/users/${id}`, { method: 'DELETE' });
         showToast('Đã vô hiệu hóa tài khoản thành công!', 'warning');
@@ -1588,6 +1604,9 @@ async function openCreateCourseModal() {
     document.getElementById('courseModalStatus').value = 'Active';
     document.getElementById('courseModalStartDate').value = '';
     document.getElementById('courseModalEndDate').value = '';
+    document.getElementById('courseModalEndDate').removeAttribute('min');
+    const errSpan = document.getElementById('courseModalEndDateError');
+    if (errSpan) errSpan.style.display = 'none';
     document.getElementById('courseModalTargetDept').value = '';
     document.getElementById('courseModalMandatory').checked = false;
     openModal('courseModal');
@@ -1607,6 +1626,7 @@ async function openEditCourseModal(id) {
     document.getElementById('courseModalStatus').value = c.status || 'Active';
     document.getElementById('courseModalStartDate').value = c.startDate ? c.startDate.substring(0, 10) : '';
     document.getElementById('courseModalEndDate').value = c.endDate ? c.endDate.substring(0, 10) : '';
+    if (typeof handleCourseDateChange === 'function') handleCourseDateChange();
     let targetIdsStr = c.targetDepartmentIds || (c.targetDepartmentId ? c.targetDepartmentId.toString() : "");
     let targetIds = targetIdsStr.split(',').map(s => s.trim());
     Array.from(document.getElementById('courseModalTargetDept').options).forEach(o => o.selected = targetIds.includes(o.value));
@@ -1651,6 +1671,15 @@ async function submitCourse() {
         isMandatory: document.getElementById('courseModalMandatory').checked
     };
     if (!body.title) { showToast('Bạn phải nhập tên khóa học!', 'error'); return; }
+    if (body.startDate && body.endDate && body.endDate <= body.startDate) {
+        const errorEl = document.getElementById('courseModalEndDateError');
+        if (errorEl) {
+            errorEl.textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+            errorEl.style.display = 'block';
+        }
+        showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'error');
+        return;
+    }
 
     try {
         if (isEdit) {
@@ -1676,7 +1705,13 @@ function refreshCourseCategoryDropdown(selectedId) {
 }
 
 async function deleteCourse(id) {
-    if (!confirm('Bạn có chắc muốn xóa khóa học này?')) return;
+    const ok = await showConfirmModal('Bạn có chắc muốn xóa khóa học này?', {
+        title: 'Xác nhận xóa khóa học',
+        confirmText: 'Xóa',
+        cancelText: 'Hủy',
+        isDanger: true
+    });
+    if (!ok) return;
     try {
         await apiFetch(`/api/it/courses/${id}`, { method: 'DELETE' });
         showToast('Xóa thành công!', 'warning');
@@ -1751,7 +1786,13 @@ async function submitDepartment() {
 }
 
 async function deleteDept(id) {
-    if (!confirm('Bạn có chắc muốn xóa phòng ban này?')) return;
+    const ok = await showConfirmModal('Bạn có chắc muốn xóa phòng ban này?', {
+        title: 'Xác nhận xóa',
+        confirmText: 'Xóa',
+        cancelText: 'Hủy',
+        isDanger: true
+    });
+    if (!ok) return;
     try {
         await apiFetch(`/api/it/departments/${id}`, { method: 'DELETE' });
         showToast('Xóa thành công!', 'warning');
@@ -3506,7 +3547,13 @@ async function submitJobTitle() {
 
 async function deleteJobTitle(id, name, userCount) {
     if (userCount > 0) { showToast('Không thể xóa! Còn ' + userCount + ' NV đang dùng chức danh này.', 'error'); return; }
-    if (!confirm('Xác nhận xóa chức danh: ' + name + '?')) return;
+    const ok = await showConfirmModal('Xác nhận xóa chức danh: ' + name + '?', {
+        title: 'Xác nhận xóa chức danh',
+        confirmText: 'Xóa',
+        cancelText: 'Hủy',
+        isDanger: true
+    });
+    if (!ok) return;
     try {
         await apiFetch('/api/it/jobtitles/' + id, { method: 'DELETE' });
         showToast('Đã xóa chức danh!', 'warning');

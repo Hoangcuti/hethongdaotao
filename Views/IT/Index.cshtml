@@ -852,7 +852,11 @@
             <div class="form-group"><label>Mô tả</label><textarea id="courseModalDesc" class="form-input" rows="3"></textarea></div>
             <div class="grid-2">
                 <div class="form-group"><label>Ngày bắt đầu</label><input id="courseModalStartDate" type="date" class="form-input"></div>
-                <div class="form-group"><label>Ngày kết thúc</label><input id="courseModalEndDate" type="date" class="form-input"></div>
+                <div class="form-group">
+                    <label>Ngày kết thúc</label>
+                    <input id="courseModalEndDate" type="date" class="form-input">
+                    <span id="courseModalEndDateError" class="text-danger" style="display:none; color:#ef4444; font-size:0.85rem; margin-top:4px; display:block;"></span>
+                </div>
             </div>
             <div class="grid-2">
                 <div class="form-group"><label>Danh mục</label><select id="courseModalCategory" class="form-input"></select></div>

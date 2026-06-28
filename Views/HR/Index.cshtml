@@ -710,7 +710,11 @@
             <div class="form-group"><label>Mô tả</label><textarea id="courseModalDesc" class="form-input" rows="3" placeholder="Mô tả nội dung và mục tiêu..."></textarea></div>
             <div class="grid-2">
                 <div class="form-group"><label>Ngày bắt đầu</label><input id="courseModalStartDate" type="date" class="form-input"></div>
-                <div class="form-group"><label>Ngày kết thúc</label><input id="courseModalEndDate" type="date" class="form-input"></div>
+                <div class="form-group">
+                    <label>Ngày kết thúc</label>
+                    <input id="courseModalEndDate" type="date" class="form-input">
+                    <span id="courseModalEndDateError" class="text-danger" style="display:none; color:#ef4444; font-size:0.85rem; margin-top:4px; display:block;"></span>
+                </div>
             </div>
             <div class="grid-2">
                 <div class="form-group"><label>Danh mục</label><select id="courseModalCategory" class="form-input"><option value="">-- Chọn danh mục --</option></select></div>
@@ -1866,6 +1870,9 @@ async function openCreateCourseModal() {
     document.getElementById('courseModalStatus').value = 'Active';
     document.getElementById('courseModalStartDate').value = '';
     document.getElementById('courseModalEndDate').value = '';
+    document.getElementById('courseModalEndDate').removeAttribute('min');
+    const errSpan = document.getElementById('courseModalEndDateError');
+    if (errSpan) errSpan.style.display = 'none';
     
     // Clear selections in target departments
     const targetDeptSel = document.getElementById('courseModalTargetDept');
@@ -1899,6 +1906,7 @@ async function openEditCourseModal(id) {
     document.getElementById('courseModalStatus').value = c.status || 'Active';
     document.getElementById('courseModalStartDate').value = c.startDate ? c.startDate.substring(0,10) : '';
     document.getElementById('courseModalEndDate').value = c.endDate ? c.endDate.substring(0,10) : '';
+    if (typeof handleCourseDateChange === 'function') handleCourseDateChange();
     
     let targetIdsStr = c.targetDepartmentIds || (c.targetDepartmentId ? c.targetDepartmentId.toString() : "");
     let targetIds = targetIdsStr.split(',').map(s => s.trim());
@@ -1927,6 +1935,15 @@ async function submitCourse() {
         isMandatory: document.getElementById('courseModalMandatory').checked
     };
     if (!body.title) { showToast('Bạn phải nhập tên khóa học!', 'error'); return; }
+    if (body.startDate && body.endDate && body.endDate <= body.startDate) {
+        const errorEl = document.getElementById('courseModalEndDateError');
+        if (errorEl) {
+            errorEl.textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+            errorEl.style.display = 'block';
+        }
+        showToast('Ngày kết thúc phải sau ngày bắt đầu.', 'error');
+        return;
+    }
 
     try {
         if (isEdit) {

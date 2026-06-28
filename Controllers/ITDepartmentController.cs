@@ -134,8 +134,13 @@ public partial class ITController : Controller
         var auth = RequireIT();
         if (auth != null) return Json(new { error = "Unauthorized" });
 
-        var dept = await _db.Departments.FindAsync(id);
+        var dept = await _db.Departments.Include(d => d.Users).FirstOrDefaultAsync(d => d.DepartmentId == id);
         if (dept == null) return NotFound();
+
+        if (dept.Users != null && dept.Users.Any())
+        {
+            return BadRequest(new { title = "Không thể xóa", error = "Phòng ban này đang có nhân viên. Vui lòng điều chuyển hoặc xóa nhân viên trước khi xóa phòng ban." });
+        }
 
         _db.Departments.Remove(dept);
         await _db.SaveChangesAsync();
