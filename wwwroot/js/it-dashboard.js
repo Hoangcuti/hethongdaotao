@@ -493,6 +493,18 @@ function openLibraryCreateModal() {
                 select.innerHTML = options || '<option value="">(Không có phòng ban)</option>';
             }
 
+            const courseSelect = document.getElementById('libraryModuleCourseInput');
+            if (courseSelect) {
+                const options = (documentLibraryData.courses || []).map(c => {
+                    const code = c.courseCode || c.CourseCode || '';
+                    return `<option value="${c.id || c.courseId}">${libraryEscape(c.title || c.courseName)}${code ? ` (${code})` : ''}</option>`;
+                }).join('');
+                courseSelect.innerHTML = '<option value="">-- Chọn khóa học --</option>' + options;
+
+                const filterVal = document.getElementById('libraryCourseFilter')?.value;
+                if (filterVal) courseSelect.value = filterVal;
+            }
+
             const mId = document.getElementById('libraryModuleId'); if (mId) mId.value = '';
             const mTitle = document.getElementById('libraryModuleTitleInput'); if (mTitle) mTitle.value = '';
 
@@ -586,16 +598,17 @@ async function syncDocumentLibraryAfterCreate(options = {}) {
 }
 
 async function submitLibraryModule() {
+    const courseId = document.getElementById('libraryModuleCourseInput').value;
     const deptId = document.getElementById('libraryModuleDeptInput').value;
     const title = document.getElementById('libraryModuleTitleInput').value.trim();
     const level = parseInt(document.getElementById('libraryModuleLevelInput').value) || null;
-    if (!deptId || !title) {
-        showToast('Bạn phải chọn phòng ban và nhập tên chương.', 'error');
+    if (!courseId || !deptId || !title) {
+        showToast('Bạn phải chọn khóa học liên kết, phòng ban và nhập tên chương.', 'error');
         return;
     }
 
     try {
-        await apiFetch(`/api/it/courses/0/modules`, {
+        await apiFetch(`/api/it/courses/${courseId}/modules`, {
             method: 'POST',
             body: JSON.stringify({ title, level, targetDepartmentId: parseInt(deptId) })
         });
