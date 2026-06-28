@@ -729,22 +729,83 @@ async function submitLibraryExam() {
             throw new Error('Element libraryExamTitleInput not found in DOM');
         }
 
+        let hasError = false;
+
+        // Clear previous errors first
+        if (typeof clearAllInlineErrors === 'function') {
+            clearAllInlineErrors('libraryExamModal');
+        }
+
         const examTitle = titleEl.value.trim();
-        const level = levelEl && levelEl.value ? parseInt(levelEl.value) : null;
-        const durationMinutes = durationEl && durationEl.value ? parseInt(durationEl.value) : 30;
-        const passScore = passScoreEl && passScoreEl.value ? parseFloat(passScoreEl.value) : 50;
-        const maxAttempts = maxAttemptsEl && maxAttemptsEl.value ? parseInt(maxAttemptsEl.value) : null;
+        if (!examTitle) {
+            setInlineError(titleEl, 'Tiêu đề không được để trống.');
+            hasError = true;
+        }
+
+        const maxAttemptsVal = maxAttemptsEl ? maxAttemptsEl.value.trim() : '';
+        let maxAttempts = null;
+        if (maxAttemptsVal !== '') {
+            const parsedAttempts = Number(maxAttemptsVal);
+            if (isNaN(parsedAttempts) || !Number.isInteger(parsedAttempts) || parsedAttempts <= 0) {
+                setInlineError(maxAttemptsEl, 'Số lần làm tối đa phải là số nguyên dương (> 0).');
+                hasError = true;
+            } else {
+                maxAttempts = parsedAttempts;
+            }
+        }
+
+        const durationVal = durationEl ? durationEl.value.trim() : '';
+        let durationMinutes = 30;
+        if (durationVal === '') {
+            setInlineError(durationEl, 'Thời gian làm bài không được để trống.');
+            hasError = true;
+        } else {
+            const parsedDuration = Number(durationVal);
+            if (isNaN(parsedDuration) || !Number.isInteger(parsedDuration) || parsedDuration <= 0) {
+                setInlineError(durationEl, 'Thời gian làm bài phải là số nguyên dương (> 0).');
+                hasError = true;
+            } else {
+                durationMinutes = parsedDuration;
+            }
+        }
+
+        const passScoreVal = passScoreEl ? passScoreEl.value.trim() : '';
+        let passScore = 50;
+        if (passScoreVal === '') {
+            setInlineError(passScoreEl, 'Điểm đỗ không được để trống.');
+            hasError = true;
+        } else {
+            const parsedPassScore = Number(passScoreVal);
+            if (isNaN(parsedPassScore) || parsedPassScore <= 0) {
+                setInlineError(passScoreEl, 'Điểm đỗ phải là số dương (> 0).');
+                hasError = true;
+            } else {
+                passScore = parsedPassScore;
+            }
+        }
+
         const startDate = startEl && startEl.value ? startEl.value : null;
         const endDate = endEl && endEl.value ? endEl.value : null;
+
+        if (startDate && endDate) {
+            if (new Date(endDate) <= new Date(startDate)) {
+                setInlineError(endEl, 'Ngày kết thúc phải sau ngày bắt đầu.');
+                hasError = true;
+            }
+        }
+
+        if (hasError) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+            return;
+        }
+
+        const level = levelEl && levelEl.value ? parseInt(levelEl.value) : null;
         const targetDepartmentId = deptEl && deptEl.value ? parseInt(deptEl.value) : null;
 
         console.log('Values collected:', { examTitle, level, durationMinutes, passScore, maxAttempts, startDate, endDate, targetDepartmentId });
-
-        if (!examTitle) {
-            showToast('Bạn phải nhập tiêu đề quiz.', 'warning');
-            if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
-            return;
-        }
 
         const payload = {
             examTitle,

@@ -208,6 +208,9 @@ function setActivePage(id) {
 function openModal(id) {
     const m = document.getElementById(id);
     if (!m) return;
+    if (typeof clearAllInlineErrors === 'function') {
+        clearAllInlineErrors(id);
+    }
     const openCount = document.querySelectorAll('.modal-backdrop.open').length;
     m.style.zIndex = String(1000 + (openCount + 1) * 20);
     m.classList.add('open');
@@ -365,6 +368,117 @@ document.addEventListener('change', (e) => {
 document.addEventListener('input', (e) => {
     if (e.target && (e.target.id === 'courseModalStartDate' || e.target.id === 'courseModalEndDate')) {
         handleCourseDateChange();
+    }
+});
+
+// Inline error helper functions
+function setInlineError(inputEl, msg) {
+    if (!inputEl) return;
+    inputEl.style.borderColor = '#ef4444';
+    let errorEl = inputEl.parentNode.querySelector('.inline-error-message');
+    if (!errorEl) {
+        errorEl = document.createElement('div');
+        errorEl.className = 'inline-error-message';
+        errorEl.style.color = '#ef4444';
+        errorEl.style.fontSize = '12px';
+        errorEl.style.marginTop = '4px';
+        errorEl.style.fontWeight = '500';
+        inputEl.parentNode.appendChild(errorEl);
+    }
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+}
+
+function clearInlineError(inputEl) {
+    if (!inputEl) return;
+    inputEl.style.borderColor = '';
+    const errorEl = inputEl.parentNode.querySelector('.inline-error-message');
+    if (errorEl) {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+    }
+}
+
+function clearAllInlineErrors(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const inputs = container.querySelectorAll('.form-input');
+    inputs.forEach(inputEl => {
+        clearInlineError(inputEl);
+    });
+}
+
+// Dynamically set minimum date for endDate based on startDate
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'libraryExamStartDateInput') {
+        const endDateEl = document.getElementById('libraryExamEndDateInput');
+        if (endDateEl) {
+            endDateEl.min = e.target.value;
+        }
+    }
+});
+document.addEventListener('input', (e) => {
+    if (e.target && e.target.classList.contains('form-input')) {
+        clearInlineError(e.target);
+    }
+});
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.classList.contains('form-input')) {
+        clearInlineError(e.target);
+    }
+});
+
+// Prevent negative sign, positive sign, exponent e/E, and decimals if it's an integer input
+document.addEventListener('keydown', (e) => {
+    const target = e.target;
+    if (!target) return;
+    
+    const id = target.id || '';
+    const isMaxAttempts = id.includes('MaxAttemptsInput');
+    const isDuration = id.includes('DurationInput');
+    const isPassScore = id.includes('PassScoreInput');
+    
+    if (isMaxAttempts || isDuration || isPassScore) {
+        // Block '-', '+', 'e', 'E'
+        if (['-', '+', 'e', 'E'].includes(e.key)) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Also block '.' and ',' for integer inputs (MaxAttempts and Duration)
+        if ((isMaxAttempts || isDuration) && (e.key === '.' || e.key === ',')) {
+            e.preventDefault();
+            return;
+        }
+    }
+});
+
+// Prevent pasting invalid non-positive characters
+document.addEventListener('paste', (e) => {
+    const target = e.target;
+    if (!target) return;
+    
+    const id = target.id || '';
+    const isMaxAttempts = id.includes('MaxAttemptsInput');
+    const isDuration = id.includes('DurationInput');
+    const isPassScore = id.includes('PassScoreInput');
+    
+    if (isMaxAttempts || isDuration || isPassScore) {
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedData = clipboardData.getData('text');
+        
+        let regex;
+        if (isMaxAttempts || isDuration) {
+            // Only allow positive integers (digits only)
+            regex = /^[0-9]+$/;
+        } else {
+            // Allow positive decimals (digits and at most one decimal point/comma)
+            regex = /^[0-9]+([.,][0-9]+)?$/;
+        }
+        
+        if (!regex.test(pastedData)) {
+            e.preventDefault();
+        }
     }
 });
 
