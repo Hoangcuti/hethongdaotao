@@ -1878,6 +1878,7 @@ async function openCreateCourseModal() {
     const targetDeptSel = document.getElementById('courseModalTargetDept');
     if (targetDeptSel) {
         Array.from(targetDeptSel.options).forEach(o => o.selected = false);
+        targetDeptSel.dispatchEvent(new Event('sync'));
     }
     
     document.getElementById('courseModalMandatory').checked = false;
@@ -1910,9 +1911,10 @@ async function openEditCourseModal(id) {
     
     let targetIdsStr = c.targetDepartmentIds || (c.targetDepartmentId ? c.targetDepartmentId.toString() : "");
     let targetIds = targetIdsStr.split(',').map(s => s.trim());
-    const targetDeptSel = document.getElementById('courseModalTargetDept');
-    if (targetDeptSel) {
-        Array.from(targetDeptSel.options).forEach(o => o.selected = targetIds.includes(o.value));
+    const targetDeptSelEdit = document.getElementById('courseModalTargetDept');
+    if (targetDeptSelEdit) {
+        Array.from(targetDeptSelEdit.options).forEach(o => o.selected = targetIds.includes(o.value));
+        targetDeptSelEdit.dispatchEvent(new Event('sync'));
     }
     
     document.getElementById('courseModalMandatory').checked = !!c.isMandatory;

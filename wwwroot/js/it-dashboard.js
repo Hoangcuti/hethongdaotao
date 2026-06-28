@@ -1706,7 +1706,11 @@ async function openCreateCourseModal() {
     document.getElementById('courseModalEndDate').removeAttribute('min');
     const errSpan = document.getElementById('courseModalEndDateError');
     if (errSpan) errSpan.style.display = 'none';
-    document.getElementById('courseModalTargetDept').value = '';
+    const targetDeptSel = document.getElementById('courseModalTargetDept');
+    if (targetDeptSel) {
+        targetDeptSel.value = '';
+        targetDeptSel.dispatchEvent(new Event('sync'));
+    }
     document.getElementById('courseModalMandatory').checked = false;
     openModal('courseModal');
 }
@@ -1728,7 +1732,11 @@ async function openEditCourseModal(id) {
     if (typeof handleCourseDateChange === 'function') handleCourseDateChange();
     let targetIdsStr = c.targetDepartmentIds || (c.targetDepartmentId ? c.targetDepartmentId.toString() : "");
     let targetIds = targetIdsStr.split(',').map(s => s.trim());
-    Array.from(document.getElementById('courseModalTargetDept').options).forEach(o => o.selected = targetIds.includes(o.value));
+    const targetDeptSelEdit = document.getElementById('courseModalTargetDept');
+    if (targetDeptSelEdit) {
+        Array.from(targetDeptSelEdit.options).forEach(o => o.selected = targetIds.includes(o.value));
+        targetDeptSelEdit.dispatchEvent(new Event('sync'));
+    }
     document.getElementById('courseModalMandatory').checked = !!c.isMandatory;
     openModal('courseModal');
 }

@@ -482,4 +482,88 @@ document.addEventListener('paste', (e) => {
     }
 });
 
+// Initialize Multiple Select to Checkbox UI conversion
+document.addEventListener('DOMContentLoaded', () => {
+    const selectEl = document.getElementById('courseModalTargetDept');
+    if (selectEl) {
+        const container = document.createElement('div');
+        container.id = 'courseModalTargetDeptContainer';
+        container.style.border = '1px solid var(--border-color)';
+        container.style.borderRadius = '6px';
+        container.style.padding = '10px';
+        container.style.maxHeight = '150px';
+        container.style.overflowY = 'auto';
+        container.style.background = 'var(--color-surface)';
+        container.style.marginTop = '4px';
+        
+        selectEl.parentNode.insertBefore(container, selectEl);
+        selectEl.style.display = 'none'; // Hide the original select
+        
+        const label = selectEl.parentNode.querySelector('label');
+        if (label && label.textContent.includes('Giữ Ctrl để chọn nhiều')) {
+            label.textContent = label.textContent.replace(' (Giữ Ctrl để chọn nhiều)', '');
+        }
+
+        function renderCheckboxes() {
+            container.innerHTML = '';
+            Array.from(selectEl.options).forEach(opt => {
+                if (!opt.value) return; // Skip empty option
+                
+                const div = document.createElement('div');
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '8px';
+                div.style.marginBottom = '6px';
+                
+                const chk = document.createElement('input');
+                chk.type = 'checkbox';
+                chk.value = opt.value;
+                chk.checked = opt.selected;
+                chk.style.width = '16px';
+                chk.style.height = '16px';
+                chk.style.cursor = 'pointer';
+                
+                const lbl = document.createElement('label');
+                lbl.textContent = opt.textContent;
+                lbl.style.margin = '0';
+                lbl.style.cursor = 'pointer';
+                lbl.style.fontSize = '14px';
+                lbl.style.fontWeight = 'normal';
+                
+                chk.addEventListener('change', () => {
+                    opt.selected = chk.checked;
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+                
+                lbl.addEventListener('click', () => {
+                    chk.checked = !chk.checked;
+                    chk.dispatchEvent(new Event('change'));
+                });
+                
+                div.appendChild(chk);
+                div.appendChild(lbl);
+                container.appendChild(div);
+            });
+        }
+
+        renderCheckboxes();
+
+        const observer = new MutationObserver(() => {
+            renderCheckboxes();
+        });
+        observer.observe(selectEl, { childList: true, subtree: true });
+
+        const syncCheckboxes = () => {
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(chk => {
+                const opt = Array.from(selectEl.options).find(o => o.value === chk.value);
+                if (opt) chk.checked = opt.selected;
+            });
+        };
+
+        selectEl.addEventListener('sync', syncCheckboxes);
+        selectEl.addEventListener('change', syncCheckboxes);
+    }
+});
+
 
