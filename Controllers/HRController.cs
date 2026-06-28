@@ -2835,6 +2835,7 @@ public class HRController : Controller
                 m.Level,
                 m.SortOrder,
                 m.CourseId,
+                m.TargetDepartmentId,
                 CourseTitle = m.Course != null ? m.Course.Title : null,
                 CourseCode = m.Course != null ? m.Course.CourseCode : null,
                 LessonsCount = m.Lessons.Count
@@ -2860,6 +2861,7 @@ public class HRController : Controller
                 l.VideoUrl,
                 l.ContentBody,
                 l.ModuleId,
+                TargetDepartmentId = l.Module != null ? l.Module.TargetDepartmentId : null,
                 ModuleTitle = l.Module != null ? l.Module.Title : null,
                 CourseId = l.Module != null ? l.Module.CourseId : null,
                 CourseTitle = l.Module != null && l.Module.Course != null ? l.Module.Course.Title : null,
