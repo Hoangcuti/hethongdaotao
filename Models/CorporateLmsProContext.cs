@@ -115,6 +115,10 @@ public partial class CorporateLmsProContext : DbContext
 
     public virtual DbSet<UserSkill> UserSkills { get; set; }
 
+    public virtual DbSet<ExamViolationLog> ExamViolationLogs { get; set; }
+    public virtual DbSet<ExamProctoringPhoto> ExamProctoringPhotos { get; set; }
+
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
     }

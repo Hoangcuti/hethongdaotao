@@ -168,9 +168,145 @@
         @@keyframes spin { to { transform: rotate(360deg); } }
 
         @@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .shell { padding: 16px; } }
+
+        /* Webcam proctoring */
+        .webcam-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid var(--color-primary-outline);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+            overflow: hidden;
+            z-index: 999;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .webcam-container:hover {
+            transform: scale(1.05);
+            border-color: var(--color-accent);
+        }
+        #webcamView {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .webcam-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: rgba(0,0,0,0.6);
+            padding: 3px 0;
+            z-index: 10;
+        }
+        .webcam-title {
+            font-size: 8px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 0.05em;
+        }
+        .pulse-rec {
+            width: 6px;
+            height: 6px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse-red-anim 1.2s infinite;
+        }
+        @@keyframes pulse-red-anim {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .webcam-status {
+            position: absolute;
+            bottom: 4px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 8px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-weight: 700;
+            z-index: 10;
+        }
+
+        /* Camera Lock Overlay */
+        .camera-lock-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(15px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lock-card {
+            background: var(--card-bg);
+            border: 1px solid var(--line);
+            padding: 40px;
+            border-radius: 24px;
+            max-width: 460px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .lock-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+            animation: bounce-anim 2s infinite;
+        }
+        @@keyframes bounce-anim {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .lock-card h2 {
+            margin: 0 0 12px;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--ink);
+        }
+        .lock-card p {
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
+<div id="cameraLockOverlay" class="camera-lock-overlay">
+    <div class="lock-card">
+        <div class="lock-icon">📷</div>
+        <h2>Bắt buộc bật Camera giám sát</h2>
+        <p>Để đảm bảo tính trung thực, bài thi này yêu cầu quyền truy cập Camera giám sát. Vui lòng nhấn nút dưới đây và cấp quyền cho trình duyệt.</p>
+        <button class="btn btn-primary" onclick="requestCameraAccess()" style="margin: 0 auto; justify-content: center;">Kích hoạt Camera</button>
+    </div>
+</div>
+
+<div class="webcam-container" id="webcamContainer" style="display:none;">
+    <div class="webcam-header">
+        <span class="pulse-rec"></span>
+        <span class="webcam-title">REC - GIÁM SÁT</span>
+    </div>
+    <video id="webcamView" autoplay muted playsinline></video>
+    <div class="webcam-status" id="webcamStatus">Đang bật...</div>
+</div>
+
 <div class="shell">
     <div class="top">
         <div>
@@ -497,6 +633,267 @@
         saveState('Đã lưu bài làm tạm thời thành công!');
     }
 
+    let localStream = null;
+    let screenStream = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let cameraSnapshotTimer = null;
+    let violationCount = 0;
+
+    async function requestCameraAccess() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 320 } });
+            
+            try {
+                screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+                const screenTrack = screenStream.getVideoTracks()[0];
+                const settings = screenTrack.getSettings();
+
+                if (settings.displaySurface !== 'monitor') {
+                    alert("Lỗi bắt buộc: Bạn phải chọn chia sẻ 'Toàn bộ màn hình' (Entire Screen / Monitor), không được phép chọn chia sẻ Tab hoặc Cửa sổ riêng lẻ!");
+                    screenTrack.stop();
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                    return;
+                }
+
+                screenTrack.addEventListener('ended', () => {
+                    reportViolation("ScreenShareStop", "Ngắt chia sẻ màn hình giám sát");
+                });
+            } catch (e) {
+                alert("Lỗi bắt buộc: Bạn phải đồng ý chia sẻ toàn bộ màn hình để thực hiện bài thi này.");
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                }
+                return;
+            }
+
+            const videoEl = document.getElementById('webcamView');
+            videoEl.srcObject = localStream;
+            
+            document.getElementById('cameraLockOverlay').style.display = 'none';
+            document.getElementById('webcamContainer').style.display = 'flex';
+            document.getElementById('webcamStatus').textContent = 'ĐANG GIÁM SÁT';
+            
+            // Khởi chạy ứng dụng thi
+            startQuizApp();
+            
+            // Định kỳ chụp ảnh
+            startCameraSnapshots();
+            
+            // Giám sát hành vi vi phạm
+            startViolationMonitoring();
+        } catch (err) {
+            console.error("Camera access error:", err);
+            alert("Lỗi bắt buộc: Bạn phải cho phép truy cập máy ảnh/webcam để thực hiện bài thi này.");
+        }
+    }
+
+    function startCameraSnapshots() {
+        if (cameraSnapshotTimer) clearInterval(cameraSnapshotTimer);
+        // Chụp ảnh định kỳ mỗi 30 giây
+        cameraSnapshotTimer = setInterval(() => {
+            captureAndUploadSnapshot("Periodic", "Ảnh chụp webcam định kỳ");
+        }, 30000);
+    }
+
+    async function captureAndUploadSnapshot(type, details) {
+        if (!localStream || !session?.userExamId) return;
+        
+        try {
+            const videoEl = document.getElementById('webcamView');
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            
+            // Vẽ ảnh lên canvas ẩn
+            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+            
+            // Chuyển sang Base64
+            const base64Image = canvas.toDataURL('image/jpeg', 0.7);
+            
+            const payload = {
+                userExamId: session.userExamId,
+                photoBase64: base64Image
+            };
+            
+            await fetch('/api/student/upload-proctoring-photo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+        } catch (err) {
+            console.error("Lỗi upload ảnh camera:", err);
+        }
+    }
+
+    function startViolationMonitoring() {
+        // Giám sát tab ẩn/hiện
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                reportViolation("TabSwitch", "Chuyển tab trình duyệt");
+            }
+        });
+        
+        // Giám sát mất focus
+        window.addEventListener('blur', () => {
+            reportViolation("FocusLoss", "Rời khỏi màn hình bài thi");
+        });
+
+        // Chặn chuột phải
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            reportViolation("RightClick", "Click chuột phải");
+            showToast("Bị cấm: Không sử dụng chuột phải khi đang thi!", "error");
+        });
+
+        // Chặn Copy / Paste
+        document.addEventListener('copy', (e) => {
+            e.preventDefault();
+            reportViolation("CopyAttempt", "Sao chép câu hỏi");
+            showToast("Bị cấm: Không sao chép câu hỏi của bài thi!", "error");
+        });
+
+        document.addEventListener('paste', (e) => {
+            e.preventDefault();
+            reportViolation("PasteAttempt", "Dán nội dung");
+            showToast("Bị cấm: Không sao chép dán thông tin khi thi!", "error");
+        });
+    }
+
+    async function reportViolation(type, details) {
+        if (!session?.userExamId) return;
+
+        // Chụp ảnh camera làm bằng chứng ngay lập tức
+        captureAndUploadSnapshot(type, details);
+
+        try {
+            const res = await fetch('/api/student/log-violation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userExamId: session.userExamId,
+                    violationType: type,
+                    details: details
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                violationCount = data.totalViolations;
+
+                showToast(`⚠️ Vi phạm: ${details}! Lần ${data.totalViolations} / ${data.maxAllowedViolations}`, "warning");
+
+                if (data.shouldSubmit) {
+                    showToast("❌ BẠN ĐÃ VI PHẠM QUÁ GIỚI HẠN! Bài thi sẽ tự động nộp ngay lập tức.", "error");
+                    setTimeout(() => {
+                        handleSuspension();
+                    }, 1000);
+                }
+            }
+        } catch (e) {
+            console.error("Lỗi ghi nhận vi phạm:", e);
+        }
+    }
+
+    let isSuspended = false;
+    async function handleSuspension() {
+        if (isSuspended) return;
+        isSuspended = true;
+
+        const blockDiv = document.createElement('div');
+        blockDiv.id = 'freezeOverlay';
+        blockDiv.style = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:sans-serif; text-align:center; padding:30px;';
+        blockDiv.innerHTML = `
+            <div style="font-size: 50px; margin-bottom: 20px;">⚠️</div>
+            <h2 style="margin:0 0 10px; color:#ef4444; font-size:24px;">BẠN ĐÃ BỊ ĐÌNH CHỈ LÀM BÀI!</h2>
+            <p style="margin:0 0 20px; font-size:15px; color:#cbd5e1; max-width:500px;">Hệ thống đang tiến hành lưu trữ video quay màn hình làm bằng chứng (5 giây). Vui lòng không đóng trình duyệt hoặc tắt máy.</p>
+            <div id="suspensionProgress" style="font-size:18px; font-weight:bold; color:#f59e0b;">Ghi hình: 5s...</div>
+        `;
+        document.body.appendChild(blockDiv);
+
+        const lockHandler = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+        document.addEventListener('keydown', lockHandler, true);
+        document.addEventListener('mousedown', lockHandler, true);
+        document.addEventListener('mouseup', lockHandler, true);
+        document.addEventListener('contextmenu', lockHandler, true);
+
+        let videoBlob = null;
+        if (screenStream && typeof MediaRecorder !== 'undefined') {
+            try {
+                recordedChunks = [];
+                mediaRecorder = new MediaRecorder(screenStream, { mimeType: 'video/webm;codecs=vp8' });
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) recordedChunks.push(event.data);
+                };
+                
+                mediaRecorder.start();
+                
+                let count = 5;
+                const interval = setInterval(() => {
+                    count--;
+                    const progressEl = document.getElementById('suspensionProgress');
+                    if (progressEl) progressEl.textContent = `Ghi hình: ${count}s...`;
+                    if (count <= 0) {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                
+                mediaRecorder.stop();
+                await new Promise(resolve => {
+                    mediaRecorder.onstop = () => {
+                        videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                        resolve();
+                    };
+                });
+            } catch (err) {
+                console.error("Lỗi khi quay màn hình:", err);
+            }
+        }
+
+        if (videoBlob) {
+            try {
+                const reader = new FileReader();
+                const base64Promise = new Promise(resolve => {
+                    reader.onloadend = () => resolve(reader.result);
+                });
+                reader.readAsDataURL(videoBlob);
+                const base64Data = await base64Promise;
+
+                await fetch('/api/student/upload-screen-recording', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userExamId: session.userExamId,
+                        videoBase64: base64Data
+                    })
+                });
+            } catch (err) {
+                console.error("Lỗi tải lên video bằng chứng:", err);
+            }
+        }
+
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop());
+        }
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+
+        await submitQuiz(true);
+    }
+
     async function submitQuiz(isAuto = false) {
         if (!session?.userExamId) return;
         if (!isAuto && !confirm('Xác nhận nộp bài? Bạn không thể chỉnh sửa sau khi nộp.')) return;
@@ -513,10 +910,15 @@
                 })
             });
             
+            // Dọn dẹp tài nguyên camera và bộ đếm
             if (autoSaveTimer) clearInterval(autoSaveTimer);
             if (heartbeatTimer) clearInterval(heartbeatTimer);
+            if (cameraSnapshotTimer) clearInterval(cameraSnapshotTimer);
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
             
-            showToast(isAuto ? 'Hết giờ! Hệ thống đã tự động nộp bài.' : 'Nộp bài thành công!', 'success');
+            showToast(isAuto ? 'Hết giờ hoặc vi phạm quy chế! Hệ thống đã tự động nộp bài.' : 'Nộp bài thành công!', 'success');
             setTimeout(() => {
                 window.location.href = `/Student/QuizResult/${res.userExamId}`;
             }, 1000);
@@ -530,15 +932,26 @@
     }
 
     function startQuizApp() {
-        initializeTheme();
         init();
     }
+
+    async function tryAutoRequestCamera() {
+        initializeTheme();
+        try {
+            // Tự động kích hoạt khi load trang
+            await requestCameraAccess();
+        } catch (e) {
+            console.log("Cần kích hoạt camera thủ công.");
+        }
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startQuizApp);
+        document.addEventListener('DOMContentLoaded', tryAutoRequestCamera);
     } else {
-        startQuizApp();
+        tryAutoRequestCamera();
     }
 </script>
 </body>
 </html>
+
 

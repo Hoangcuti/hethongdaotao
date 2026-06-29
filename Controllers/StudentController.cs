@@ -847,6 +847,205 @@ public class StudentController : Controller
         return Ok(new { success = true, userExamId = userExam.UserExamId, score });
     }
 
+    public class LogViolationDto
+    {
+        public int UserExamId { get; set; }
+        public string ViolationType { get; set; } = null!;
+        public string? Details { get; set; }
+    }
+
+    public class UploadPhotoDto
+    {
+        public int UserExamId { get; set; }
+        public string PhotoBase64 { get; set; } = null!;
+    }
+
+    public class UploadScreenRecordingDto
+    {
+        public int UserExamId { get; set; }
+        public string VideoBase64 { get; set; } = null!;
+    }
+
+    [HttpPost("/api/student/log-violation")]
+    public async Task<IActionResult> LogViolation([FromBody] LogViolationDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var userExam = await _db.UserExams
+            .Include(ue => ue.Exam)
+            .FirstOrDefaultAsync(ue => ue.UserExamId == dto.UserExamId && ue.UserId == userId);
+        
+        if (userExam == null) return NotFound(new { error = "Không tìm thấy phiên làm bài thi." });
+        if (userExam.IsFinish == true) return BadRequest(new { error = "Bài thi đã kết thúc." });
+
+        var violation = new ExamViolationLog
+        {
+            UserExamId = dto.UserExamId,
+            ViolationType = dto.ViolationType,
+            Details = dto.Details,
+            CreatedAt = DateTime.Now
+        };
+        _db.ExamViolationLogs.Add(violation);
+        await _db.SaveChangesAsync();
+
+        var totalViolations = await _db.ExamViolationLogs.CountAsync(v => v.UserExamId == dto.UserExamId);
+        
+        // Mặc định giới hạn vi phạm tối đa là 3 lần
+        int maxAllowedViolations = 3; 
+        bool shouldSubmit = totalViolations >= maxAllowedViolations;
+
+        return Ok(new
+        {
+            success = true,
+            totalViolations,
+            maxAllowedViolations,
+            shouldSubmit
+        });
+    }
+
+    [HttpPost("/api/student/upload-proctoring-photo")]
+    public async Task<IActionResult> UploadProctoringPhoto([FromBody] UploadPhotoDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var userExam = await _db.UserExams
+            .FirstOrDefaultAsync(ue => ue.UserExamId == dto.UserExamId && ue.UserId == userId);
+        
+        if (userExam == null) return NotFound(new { error = "Không tìm thấy phiên làm bài thi." });
+        if (userExam.IsFinish == true) return BadRequest(new { error = "Bài thi đã kết thúc." });
+
+        try
+        {
+            var base64Data = dto.PhotoBase64;
+            if (base64Data.Contains(","))
+            {
+                base64Data = base64Data.Substring(base64Data.IndexOf(",") + 1);
+            }
+            var bytes = Convert.FromBase64String(base64Data);
+
+            var folderPath = Path.Combine(_env.WebRootPath, "uploads", "proctoring", dto.UserExamId.ToString());
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            var fileName = $"{DateTime.Now:yyyyMMddHHmmssfff}.jpg";
+            var filePath = Path.Combine(folderPath, fileName);
+            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+
+            var dbPath = $"/uploads/proctoring/{dto.UserExamId}/{fileName}";
+
+            var proctoringPhoto = new ExamProctoringPhoto
+            {
+                UserExamId = dto.UserExamId,
+                PhotoUrl = dbPath,
+                CapturedAt = DateTime.Now
+            };
+
+            _db.ExamProctoringPhotos.Add(proctoringPhoto);
+            await _db.SaveChangesAsync();
+
+            return Ok(new { success = true, photoUrl = dbPath });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi lưu ảnh giám sát thi cử.");
+            return StatusCode(500, new { error = "Lỗi khi lưu ảnh: " + ex.Message });
+        }
+    }
+
+    [HttpPost("/api/student/upload-screen-recording")]
+    public async Task<IActionResult> UploadScreenRecording([FromBody] UploadScreenRecordingDto dto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
+
+        var userExam = await _db.UserExams
+            .Include(ue => ue.User)
+            .Include(ue => ue.Exam)
+            .FirstOrDefaultAsync(ue => ue.UserExamId == dto.UserExamId && ue.UserId == userId);
+        
+        if (userExam == null) return NotFound(new { error = "Không tìm thấy phiên làm bài thi." });
+
+        try
+        {
+            var base64Data = dto.VideoBase64;
+            if (base64Data.Contains(","))
+            {
+                base64Data = base64Data.Substring(base64Data.IndexOf(",") + 1);
+            }
+            var bytes = Convert.FromBase64String(base64Data);
+
+            var folderPath = Path.Combine(_env.WebRootPath, "uploads", "proctoring", dto.UserExamId.ToString());
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            var fileName = "screen_recording.webm";
+            var filePath = Path.Combine(folderPath, fileName);
+            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+
+            var dbPath = $"/uploads/proctoring/{dto.UserExamId}/{fileName}";
+
+            userExam.ScreenRecordingUrl = dbPath;
+            await _db.SaveChangesAsync();
+
+            // Create notification for Manager/HR
+            int? managerId = null;
+            if (userExam.User != null && userExam.User.DepartmentId.HasValue)
+            {
+                var dept = await _db.Departments.FirstOrDefaultAsync(d => d.DepartmentId == userExam.User.DepartmentId.Value);
+                if (dept != null && dept.ManagerId.HasValue)
+                {
+                    managerId = dept.ManagerId.Value;
+                }
+            }
+
+            if (!managerId.HasValue)
+            {
+                var adminRole = await _db.Roles.FirstOrDefaultAsync(r => r.RoleName == "IT" || r.RoleName == "HR");
+                if (adminRole != null)
+                {
+                    var fallbackUser = await _db.Users.FirstOrDefaultAsync(u => u.Status == "Active");
+                    if (fallbackUser != null) managerId = fallbackUser.UserId;
+                }
+            }
+
+            if (managerId.HasValue)
+            {
+                int nextId = 1;
+                if (await _db.Notifications.AnyAsync())
+                {
+                    nextId = await _db.Notifications.MaxAsync(n => n.Id) + 1;
+                }
+
+                var cleanName = userExam.User?.FullName ?? "Học viên";
+                var cleanExamTitle = userExam.Exam?.ExamTitle ?? "bài thi";
+
+                var notification = new Notification
+                {
+                    Id = nextId,
+                    UserId = managerId.Value,
+                    Title = $"[GIAN LẬN - EXAM_ID:{userExam.ExamId} - USER_EXAM_ID:{userExam.UserExamId}] Học viên {cleanName} đã bị đình chỉ làm {cleanExamTitle} do vi phạm quy chế.",
+                    IsRead = false
+                };
+
+                _db.Notifications.Add(notification);
+                await _db.SaveChangesAsync();
+            }
+
+            return Ok(new { success = true, videoUrl = dbPath });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi lưu video quay màn hình giám sát.");
+            return StatusCode(500, new { error = "Lỗi khi lưu video: " + ex.Message });
+        }
+    }
+
     [HttpGet("/api/student/quiz-results/{userExamId}")]
     public async Task<IActionResult> QuizResultData(int userExamId)
     {

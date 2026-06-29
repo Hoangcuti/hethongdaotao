@@ -2615,7 +2615,20 @@ function renderParticipantsList() {
         filtered = filtered.filter(p => p.statusText === statusFilter);
     }
 
-    tbody.innerHTML = filtered.length ? filtered.map(p => `
+    tbody.innerHTML = filtered.length ? filtered.map((p, index) => {
+        const hasAttempts = p.attempts && p.attempts.length > 0;
+        let proctoringBtn = '<span style="color:#94a3b8">Chưa thi</span>';
+        if (hasAttempts) {
+            const firstAttempt = p.attempts[0];
+            const vCount = firstAttempt.violationsCount || 0;
+            const badgeClass = vCount > 0 ? 'danger' : 'success';
+            proctoringBtn = `
+                <button class="btn btn-secondary btn-sm" onclick="showProctoringDetails(${index})" style="font-size:11px; padding:4px 8px; border-radius:6px;">
+                    📷 Xem (${vCount} lỗi)
+                </button>
+            `;
+        }
+        return `
         <tr>
             <td style="font-family:monospace">${p.employeeCode || 'N/A'}</td>
             <td><strong>${hrLibraryEscape(p.fullName)}</strong></td>
@@ -2623,8 +2636,69 @@ function renderParticipantsList() {
             <td>${p.score !== null ? `<span style="font-weight:800; font-size:14px;">${p.score}</span>` : '<span style="color:#94a3b8">--</span>'}</td>
             <td><span class="badge badge-${p.statusClass}">${p.statusText}</span></td>
             <td>${p.endTime ? hrFmtDate(p.endTime) : '<span style="color:#94a3b8">--</span>'}</td>
+            <td>${proctoringBtn}</td>
         </tr>
-    `).join('') : '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:20px;">Không tìm thấy nhân sự phù hợp.</td></tr>';
+        `;
+    }).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:20px;">Không tìm thấy nhân sự phù hợp.</td></tr>';
+}
+
+window.showProctoringDetails = function(index) {
+    const keyword = (document.getElementById('participantsSearch')?.value || '').trim().toLowerCase();
+    const statusFilter = document.getElementById('participantsStatusFilter')?.value || hrCurrentParticipantsFilterStatus;
+
+    let filtered = hrParticipantsList;
+
+    if (keyword) {
+        filtered = filtered.filter(p => p.fullName.toLowerCase().includes(keyword) || (p.employeeCode || '').toLowerCase().includes(keyword));
+    }
+
+    if (statusFilter) {
+        filtered = filtered.filter(p => p.statusText === statusFilter);
+    }
+
+    const p = filtered[index];
+    if (!p || !p.attempts || p.attempts.length === 0) return;
+    
+    const attempt = p.attempts[0];
+    
+    document.getElementById('proctoringTitle').textContent = `Giám sát camera: ${p.fullName}`;
+    document.getElementById('proctoringSubtitle').textContent = `Mã NV: ${p.employeeCode || 'N/A'} - Lượt thi ID: ${attempt.userExamId}`;
+    
+    const violationsList = document.getElementById('proctoringViolationsList');
+    if (attempt.violations && attempt.violations.length > 0) {
+        violationsList.innerHTML = attempt.violations.map(v => `
+            <div style="padding:10px 14px; background:rgba(239,68,68,0.08); border-left:4px solid #ef4444; border-radius:6px; font-size:13px; margin-bottom: 8px;">
+                <div style="font-weight:700; display:flex; justify-content:space-between;">
+                    <span style="color: #ef4444;">🚨 ${hrLibraryEscape(v.violationType)}</span>
+                    <small style="color:#94a3b8; font-weight:normal;">${hrFmtDate(v.createdAt)}</small>
+                </div>
+                <div style="margin-top:4px; font-size:12px; color:#64748b;">${hrLibraryEscape(v.details || '')}</div>
+            </div>
+        `).join('');
+    } else {
+        violationsList.innerHTML = `
+            <div style="padding:12px; background:rgba(16,185,129,0.08); border-left:4px solid #10b981; border-radius:6px; font-size:13px; color:#10b981; font-weight:600; text-align:center;">
+                ✅ Không phát hiện hành vi vi phạm quy chế nào.
+            </div>
+        `;
+    }
+    
+    const photosGrid = document.getElementById('proctoringPhotosGrid');
+    if (attempt.photos && attempt.photos.length > 0) {
+        photosGrid.innerHTML = attempt.photos.map(url => `
+            <div style="position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; background:#000;">
+                <img src="${url}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.open('${url}', '_blank')" title="Click để xem ảnh lớn" />
+            </div>
+        `).join('');
+    } else {
+        photosGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:13px;">
+                📷 Không có ảnh bằng chứng camera được chụp.
+            </div>
+        `;
+    }
+    
+    openModal('proctoringDetailsModal');
 }
 
 // Attach event listeners when JS is fully loaded

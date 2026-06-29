@@ -201,6 +201,35 @@ IF COL_LENGTH('dbo.QuestionBank', 'QuestionType') IS NULL
 IF COL_LENGTH('dbo.UserAnswers', 'TextResponse') IS NULL
     ALTER TABLE dbo.UserAnswers ADD TextResponse NVARCHAR(MAX) NULL;
 
+IF OBJECT_ID('dbo.ExamViolationLogs', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ExamViolationLogs
+    (
+        ViolationID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ExamViolationLogs PRIMARY KEY,
+        UserExamID INT NOT NULL,
+        ViolationType NVARCHAR(50) NOT NULL,
+        Details NVARCHAR(500) NULL,
+        CreatedAt DATETIME NOT NULL CONSTRAINT DF_ExamViolationLogs_CreatedAt DEFAULT(GETDATE()),
+        CONSTRAINT FK_ExamViolationLogs_UserExams FOREIGN KEY (UserExamID) REFERENCES dbo.UserExams(UserExamID) ON DELETE CASCADE
+    );
+END;
+
+IF OBJECT_ID('dbo.ExamProctoringPhotos', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.ExamProctoringPhotos
+    (
+        PhotoID INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_ExamProctoringPhotos PRIMARY KEY,
+        UserExamID INT NOT NULL,
+        PhotoUrl NVARCHAR(500) NOT NULL,
+        CapturedAt DATETIME NOT NULL CONSTRAINT DF_ExamProctoringPhotos_CapturedAt DEFAULT(GETDATE()),
+        CONSTRAINT FK_ExamProctoringPhotos_UserExams FOREIGN KEY (UserExamID) REFERENCES dbo.UserExams(UserExamID) ON DELETE CASCADE
+    );
+END;
+
+IF COL_LENGTH('dbo.UserExams', 'ScreenRecordingUrl') IS NULL
+    ALTER TABLE dbo.UserExams ADD ScreenRecordingUrl NVARCHAR(500) NULL;
+
+
 -- Clean up old soft-deleted courses and their related data
 IF OBJECT_ID('tempdb..#DeletedCourseIDs') IS NOT NULL DROP TABLE #DeletedCourseIDs;
 SELECT CourseID INTO #DeletedCourseIDs FROM dbo.Courses WHERE Status = 'Deleted';

@@ -3548,8 +3548,8 @@ function openEditExamModal(examId) {
     document.getElementById('editExamDurationInput').value = exam.durationMinutes || 30;
     document.getElementById('editExamPassScoreInput').value = exam.passScore || 50;
     document.getElementById('editExamMaxAttemptsInput').value = exam.maxAttempts || '';
-    document.getElementById('editExamStartDateInput').value = exam.startDate ? exam.startDate.substring(0, 10) : '';
-    document.getElementById('editExamEndDateInput').value = exam.endDate ? exam.endDate.substring(0, 10) : '';
+    document.getElementById('editExamStartDateInput').value = exam.startDate ? exam.startDate.substring(0, 16) : '';
+    document.getElementById('editExamEndDateInput').value = exam.endDate ? exam.endDate.substring(0, 16) : '';
     const deptOpts = '<option value="">-- Tất cả phòng ban --</option>' + departments.map(d => `<option value="${d.departmentId}" ${d.departmentId == exam.targetDepartmentId ? 'selected' : ''}>${d.departmentName}</option>`).join('');
     document.getElementById('editExamTargetDeptInput').innerHTML = deptOpts;
     openModal('editExamModal');

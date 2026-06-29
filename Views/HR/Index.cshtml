@@ -575,6 +575,7 @@
                         <th>Điểm</th>
                         <th>Trạng thái</th>
                         <th>Ngày nộp</th>
+                        <th>Giám sát</th>
                     </tr>
                 </thead>
                 <tbody id="participantsTableBody">
@@ -584,6 +585,47 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeModal('examParticipantsModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Proctoring Details Modal -->
+<div class="modal-backdrop" id="proctoringDetailsModal" style="z-index: 2000;">
+    <div class="modal-box" style="max-width:700px; width:90vw;">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="proctoringTitle">Chi tiết lịch sử Giám sát Webcam</div>
+                <div style="font-size:12px; color: #64748b; margin-top:4px;" id="proctoringSubtitle">Ảnh bằng chứng và các vi phạm trong quá trình làm bài</div>
+            </div>
+            <button class="modal-close" onclick="closeModal('proctoringDetailsModal')">✖</button>
+        </div>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto; padding: 20px;">
+            <div style="margin-bottom: 15px; display: none; align-items: center; gap: 10px;" id="proctoringAttemptSelectContainer">
+                <label style="font-weight: 600; font-size: 13px; color: var(--text-primary); margin: 0;">Lượt thi:</label>
+                <select id="proctoringAttemptSelect" class="form-input" style="width: auto; padding: 4px 10px; height: 32px; font-size: 13px; min-height: 32px; margin: 0;"></select>
+            </div>
+            <div style="margin-bottom: 20px; display: none;" id="proctoringVideoContainer">
+                <h4 style="margin: 0 0 10px; color: var(--text-primary);">🖥️ Video quay màn hình 5s (Bằng chứng vi phạm)</h4>
+                <div style="border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: #000; max-width: 480px; margin: 0 auto;">
+                    <video id="proctoringScreenVideo" controls style="width: 100%; display: block;"></video>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <h4 style="margin: 0 0 10px; color: var(--text-primary);">⚠️ Log Vi phạm quy chế</h4>
+                <div id="proctoringViolationsList" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Vi phạm loaded dynamically -->
+                </div>
+            </div>
+            <hr style="border:0; border-top:1px solid var(--border-color); margin:20px 0;" />
+            <div>
+                <h4 style="margin: 0 0 12px; color: var(--text-primary);">📸 Ảnh chụp Webcam bằng chứng</h4>
+                <div id="proctoringPhotosGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
+                    <!-- Ảnh loaded dynamically -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('proctoringDetailsModal')">Đóng</button>
         </div>
     </div>
 </div>
@@ -3168,6 +3210,7 @@ async function loadHrNotifications() {
             const matchExtend = titleStr.match(/^\[GIA HẠN - ID:(\d+)\]\s*(.*)$/);
             const matchProposal = titleStr.match(/^\[ĐỀ XUẤT - ID:(\d+)\]\s*(.*)$/);
             const matchReject = titleStr.match(/^\[TỪ CHỐI - ID:(\d+)\]\s*(.*)$/);
+            const matchCheat = titleStr.match(/^\[GIAN LẬN - EXAM_ID:(\d+) - USER_EXAM_ID:(\d+)\]\s*(.*)$/);
             
             let displayTitle = titleStr;
             let actionBtnHtml = '';
@@ -3210,6 +3253,17 @@ async function loadHrNotifications() {
                 actionBtnHtml = `
                     <button class="btn btn-danger btn-sm" style="background-color:#ef4444; color:white; border:none;" onclick="showRejectionReason(${docId})">Xem lý do từ chối</button>
                 `;
+            } else if (matchCheat) {
+                const examId = parseInt(matchCheat[1]);
+                const userExamId = parseInt(matchCheat[2]);
+                const cleanTitle = matchCheat[3];
+                displayTitle = cleanTitle;
+                badgeHtml = '<span class="badge badge-danger" style="background-color: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">GIAN LẬN</span>';
+                hideMarkAsRead = true;
+                
+                actionBtnHtml = `
+                    <button class="btn btn-secondary btn-sm" onclick="showProctoringFromNotification(${examId}, ${userExamId}, ${n.id})">Xem lại giám sát</button>
+                `;
             }
             
             return `
@@ -3243,6 +3297,49 @@ async function quickExtend(btnEl, assignmentId) {
     const courseTitle = courseMatch ? courseMatch[1] : 'Khóa học';
     await extendAssignment(assignmentId, courseTitle);
     await loadHrNotifications();
+}
+
+async function showProctoringFromNotification(examId, userExamId, notifId) {
+    try {
+        if (notifId) {
+            await apiFetch(`/api/hr/notifications/${notifId}/read`, { method: 'POST' });
+            await loadHrNotifications();
+        }
+        
+        await openExamParticipants(examId);
+        
+        const index = loadedParticipants.findIndex(p => p.attempts && p.attempts.some(a => a.userExamId === userExamId));
+        if (index !== -1) {
+            const p = loadedParticipants[index];
+            currentSelectedParticipantAttempts = p.attempts;
+            
+            document.getElementById('proctoringTitle').textContent = `Giám sát camera: ${p.fullName}`;
+            
+            const selectContainer = document.getElementById('proctoringAttemptSelectContainer');
+            const selectEl = document.getElementById('proctoringAttemptSelect');
+            
+            if (p.attempts.length > 1) {
+                selectContainer.style.display = 'flex';
+                selectEl.innerHTML = p.attempts.map((a, i) => {
+                    const formattedTime = a.startTime ? fmtDateTime(a.startTime) : `Lượt ${p.attempts.length - i}`;
+                    const scoreLabel = a.score !== null ? ` - Điểm: ${a.score}%` : ' - Chưa nộp';
+                    const finishLabel = a.isFinish ? '' : ' (Đang làm)';
+                    return `<option value="${i}" ${a.userExamId === userExamId ? 'selected' : ''}>Lượt thi ${p.attempts.length - i} (${formattedTime}${scoreLabel}${finishLabel})</option>`;
+                }).join('');
+            } else {
+                selectContainer.style.display = 'none';
+            }
+            
+            const attemptIdx = p.attempts.findIndex(a => a.userExamId === userExamId);
+            renderAttemptProctoringData(attemptIdx !== -1 ? attemptIdx : 0, p.employeeCode);
+            
+            openModal('proctoringDetailsModal');
+        } else {
+            showToast('Không tìm thấy lượt thi của học viên này trong danh sách.', 'warning');
+        }
+    } catch (e) {
+        showToast('Lỗi hiển thị chi tiết giám sát: ' + e.message, 'danger');
+    }
 }
 
 async function markHrNotifRead(id) {
@@ -3702,7 +3799,7 @@ function renderParticipantsList() {
         filtered = filtered.filter(p => p.statusText === statusVal);
     }
     
-    tbody.innerHTML = filtered.length ? filtered.map(p => {
+    tbody.innerHTML = filtered.length ? filtered.map((p, index) => {
         const scoreText = p.score !== null && p.score !== undefined ? `${p.score}%` : '--';
         const dateText = p.endTime ? fmtDateTime(p.endTime) : '--';
         
@@ -3710,6 +3807,17 @@ function renderParticipantsList() {
         if (p.statusClass === 'success') badgeClass = 'badge-success';
         if (p.statusClass === 'danger') badgeClass = 'badge-danger';
         if (p.statusClass === 'warning') badgeClass = 'badge-info';
+
+        const hasAttempts = p.attempts && p.attempts.length > 0;
+        let proctoringBtn = '<span style="color:#94a3b8">Chưa thi</span>';
+        if (hasAttempts) {
+            const totalViolations = p.attempts.reduce((sum, a) => sum + (a.violationsCount || 0), 0);
+            proctoringBtn = `
+                <button class="btn btn-secondary btn-sm" onclick="showProctoringDetails(${index})" style="font-size:11px; padding:4px 8px; border-radius:6px;">
+                    📷 Xem (${totalViolations} lỗi)
+                </button>
+            `;
+        }
 
         return `
             <tr>
@@ -3719,9 +3827,113 @@ function renderParticipantsList() {
                 <td style="font-weight:700">${scoreText}</td>
                 <td><span class="badge ${badgeClass}">${p.statusText}</span></td>
                 <td style="font-size:12px; color:#64748b">${dateText}</td>
+                <td>${proctoringBtn}</td>
             </tr>`;
-    }).join('') : '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:24px">Không có kết quả nào phù hợp.</td></tr>';
+    }).join('') : '<tr><td colspan="7" style="text-align:center; color:#94a3b8; padding:24px">Không có kết quả nào phù hợp.</td></tr>';
 }
+
+let currentSelectedParticipantAttempts = [];
+
+window.showProctoringDetails = function(index) {
+    const searchVal = (document.getElementById('participantsSearch')?.value || '').trim().toLowerCase();
+    const statusVal = document.getElementById('participantsStatusFilter')?.value || '';
+    let filtered = loadedParticipants;
+    if (searchVal) {
+        filtered = filtered.filter(p => String(p.fullName || '').toLowerCase().includes(searchVal) || String(p.employeeCode || '').toLowerCase().includes(searchVal));
+    }
+    if (statusVal) {
+        filtered = filtered.filter(p => p.statusText === statusVal);
+    }
+    
+    const p = filtered[index];
+    if (!p || !p.attempts || p.attempts.length === 0) return;
+    
+    currentSelectedParticipantAttempts = p.attempts;
+    
+    document.getElementById('proctoringTitle').textContent = `Giám sát camera: ${p.fullName}`;
+    
+    const selectContainer = document.getElementById('proctoringAttemptSelectContainer');
+    const selectEl = document.getElementById('proctoringAttemptSelect');
+    
+    if (p.attempts.length > 1) {
+        selectContainer.style.display = 'flex';
+        selectEl.innerHTML = p.attempts.map((a, i) => {
+            const formattedTime = a.startTime ? fmtDateTime(a.startTime) : `Lượt ${p.attempts.length - i}`;
+            const scoreLabel = a.score !== null ? ` - Điểm: ${a.score}%` : ' - Chưa nộp';
+            const finishLabel = a.isFinish ? '' : ' (Đang làm)';
+            return `<option value="${i}">Lượt thi ${p.attempts.length - i} (${formattedTime}${scoreLabel}${finishLabel})</option>`;
+        }).join('');
+        selectEl.value = "0";
+    } else {
+        selectContainer.style.display = 'none';
+    }
+    
+    renderAttemptProctoringData(0, p.employeeCode);
+    openModal('proctoringDetailsModal');
+};
+
+window.renderAttemptProctoringData = function(attemptIndex, employeeCode = '') {
+    const attempt = currentSelectedParticipantAttempts[attemptIndex];
+    if (!attempt) return;
+    
+    document.getElementById('proctoringSubtitle').textContent = `Mã NV: ${employeeCode || 'N/A'} - Lượt thi ID: ${attempt.userExamId}`;
+    
+    const videoContainer = document.getElementById('proctoringVideoContainer');
+    const videoEl = document.getElementById('proctoringScreenVideo');
+    if (attempt.screenRecordingUrl) {
+        videoContainer.style.display = 'block';
+        videoEl.src = attempt.screenRecordingUrl;
+    } else {
+        videoContainer.style.display = 'none';
+        videoEl.src = '';
+    }
+    
+    const violationsList = document.getElementById('proctoringViolationsList');
+    if (attempt.violations && attempt.violations.length > 0) {
+        violationsList.innerHTML = attempt.violations.map(v => `
+            <div style="padding:10px 14px; background:rgba(239,68,68,0.08); border-left:4px solid #ef4444; border-radius:6px; font-size:13px; margin-bottom: 8px;">
+                <div style="font-weight:700; display:flex; justify-content:space-between;">
+                    <span style="color: #ef4444;">🚨 ${libraryEscape(v.violationType)}</span>
+                    <small style="color:#94a3b8; font-weight:normal;">${fmtDateTime(v.createdAt)}</small>
+                </div>
+                <div style="margin-top:4px; font-size:12px; color:#64748b;">${libraryEscape(v.details || '')}</div>
+            </div>
+        `).join('');
+    } else {
+        violationsList.innerHTML = `
+            <div style="padding:12px; background:rgba(16,185,129,0.08); border-left:4px solid #10b981; border-radius:6px; font-size:13px; color:#10b981; font-weight:600; text-align:center;">
+                ✅ Không phát hiện hành vi vi phạm quy chế nào trong lượt thi này.
+            </div>
+        `;
+    }
+    
+    const photosGrid = document.getElementById('proctoringPhotosGrid');
+    if (attempt.photos && attempt.photos.length > 0) {
+        photosGrid.innerHTML = attempt.photos.map(url => `
+            <div style="position:relative; aspect-ratio:1; border-radius:10px; overflow:hidden; border:1px solid #e2e8f0; background:#000;">
+                <img src="${url}" style="width:100%; height:100%; object-fit:cover; cursor:pointer;" onclick="window.open('${url}', '_blank')" title="Click để xem ảnh lớn" />
+            </div>
+        `).join('');
+    } else {
+        photosGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align:center; padding:20px; color:#94a3b8; font-size:13px;">
+                📷 Không có ảnh bằng chứng camera được chụp trong lượt thi này.
+            </div>
+        `;
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const selectEl = document.getElementById('proctoringAttemptSelect');
+    if (selectEl) {
+        selectEl.addEventListener('change', (e) => {
+            const subtitleEl = document.getElementById('proctoringSubtitle');
+            const empCodeMatch = subtitleEl.textContent.match(/Mã NV:\s*([^\s-]+)/);
+            const empCode = empCodeMatch ? empCodeMatch[1] : '';
+            renderAttemptProctoringData(parseInt(e.target.value), empCode);
+        });
+    }
+});
 
 function openCreateExamModal() {
     const eId = document.getElementById('libraryExamId'); if (eId) eId.value = '';

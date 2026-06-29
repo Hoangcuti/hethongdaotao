@@ -2377,6 +2377,8 @@ public class HRController : Controller
         var userExams = await _db.UserExams
             .Include(ue => ue.User)
                 .ThenInclude(u => u.Department)
+            .Include(ue => ue.ExamViolationLogs)
+            .Include(ue => ue.ExamProctoringPhotos)
             .Where(ue => ue.ExamId == examId)
             .ToListAsync();
 
@@ -2459,7 +2461,18 @@ public class HRController : Controller
                 score = score,
                 statusText = statusText,
                 statusClass = statusClass,
-                endTime = endTime
+                endTime = endTime,
+                attempts = attempts.Select(a => new {
+                    userExamId = a.UserExamId,
+                    score = a.Score,
+                    isFinish = a.IsFinish,
+                    startTime = a.StartTime,
+                    endTime = a.EndTime,
+                    violationsCount = a.ExamViolationLogs.Count,
+                    violations = a.ExamViolationLogs.Select(v => new { v.ViolationType, v.Details, v.CreatedAt }).ToList(),
+                    photos = a.ExamProctoringPhotos.Select(p => p.PhotoUrl).ToList(),
+                    screenRecordingUrl = a.ScreenRecordingUrl
+                }).OrderByDescending(a => a.startTime).ToList()
             });
         }
 
