@@ -416,36 +416,219 @@
         </div>
     </div>
     <div id="analytics" class="page-section" style="display:none">
-        <div class="grid-2" style="margin-bottom:20px">
-            <div class="card">
-                <div class="card-header"><div class="card-title">🏢 Nhân viên theo phòng ban</div></div>
-                <div class="card-body"><canvas id="deptChart" height="220"></canvas></div>
+        <div class="analytics-header" style="margin-bottom: 24px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Phân tích nâng cao (Learning Analytics)</h2>
+                    <p style="font-size: 13px; color: #64748b; margin: 0;">Phân tích dữ liệu đào tạo để hỗ trợ ra quyết định</p>
+                </div>
             </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">📚 Khóa học theo danh mục</div></div>
-                <div class="card-body"><canvas id="catChart" height="220"></canvas></div>
-            </div>
-        </div>
-        <div class="grid-2" style="margin-bottom:20px">
-            <div class="card">
-                <div class="card-header"><div class="card-title">📈 Enrollment theo tháng (6 tháng gần nhất)</div></div>
-                <div class="card-body"><canvas id="enrollChart" height="200"></canvas></div>
-            </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">🎯 Tỷ lệ pass/fail Quiz</div></div>
-                <div class="card-body">
-                    <canvas id="examChart" height="180"></canvas>
-                    <div id="examStatText" style="text-align:center; margin-top:10px; font-size:13px; color:#64748b"></div>
+
+            <div style="background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
+                <div style="display: grid; grid-template-columns: 200px 1fr 1fr 1fr 1fr auto; gap: 12px; align-items: end;">
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Từ ngày</label>
+                        <input type="date" id="anaStartDate" class="form-input" style="width: 100%;" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Đến ngày</label>
+                        <input type="date" id="anaEndDate" class="form-input" style="width: 100%;" />
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Phòng ban</label>
+                        <select id="anaDeptSelect" class="form-input" style="width: 100%;">
+                            <option value="">Tất cả</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Khóa học</label>
+                        <select class="form-input" style="width: 100%;"><option>Tất cả</option></select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Trạng thái</label>
+                        <select class="form-input" style="width: 100%;"><option>Tất cả</option></select>
+                    </div>
+                    <div style="display: flex; gap: 8px; padding-bottom: 1px;">
+                        <button class="btn btn-primary" onclick="analyticsModule.applyFilters()" style="white-space: nowrap;">🔍 Áp dụng</button>
+                        <button class="btn" onclick="analyticsModule.exportReport()" style="background:#fff; border:1px solid #cbd5e1; color:#3b82f6; white-space: nowrap;">📥 Xuất</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header"><div class="card-title">🏆 Top 5 khóa học phổ biến nhất</div></div>
-            <div class="card-body">
-                <table class="lms-table">
-                    <thead><tr><th>#</th><th>Tên khóa học</th><th>Số học viên</th></tr></thead>
-                    <tbody id="topCoursesTable"></tbody>
-                </table>
+
+        <div class="analytics-tabs" style="display: flex; gap: 24px; border-bottom: 2px solid #f1f5f9; margin-bottom: 24px;">
+            <button class="tab-btn active" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid #3b82f6; color:#3b82f6; font-weight:600; cursor:pointer;" onclick="analyticsModule.switchTab('overview')">🌐 Tổng quan</button>
+            <button class="tab-btn" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid transparent; color:#64748b; font-weight:500; cursor:pointer;" onclick="analyticsModule.switchTab('departments')">🏢 Phòng ban</button>
+            <button class="tab-btn" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid transparent; color:#64748b; font-weight:500; cursor:pointer;" onclick="analyticsModule.switchTab('courses')">📚 Khóa học</button>
+            <button class="tab-btn" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid transparent; color:#64748b; font-weight:500; cursor:pointer;" onclick="analyticsModule.switchTab('exams')">📝 Bài thi</button>
+            <button class="tab-btn" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid transparent; color:#64748b; font-weight:500; cursor:pointer;" onclick="analyticsModule.switchTab('users')">👥 Nhân viên</button>
+            <button class="tab-btn" style="padding: 12px 0; background:none; border:none; border-bottom: 2px solid transparent; color:#64748b; font-weight:500; cursor:pointer;" onclick="analyticsModule.switchTab('reports')">📄 Báo cáo</button>
+        </div>
+
+        <div class="analytics-content">
+            <!-- OVERVIEW TAB -->
+            <div id="ana-tab-overview" class="ana-tab-content">
+                <!-- Stat Cards -->
+                <div class="ana-stat-grid">
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon blue">👥</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Tổng nhân viên</div>
+                            <div class="ana-stat-value"><span id="ana-stat-users">0</span> <span class="ana-stat-growth positive" id="ana-growth-users">+0%</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-users">0</span></div>
+                        </div>
+                    </div>
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon purple">📘</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Khóa học đang mở</div>
+                            <div class="ana-stat-value"><span id="ana-stat-courses">0</span> <span class="ana-stat-growth positive" id="ana-growth-courses">+0%</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-courses">0</span></div>
+                        </div>
+                    </div>
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon green">✅</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Lượt ghi danh</div>
+                            <div class="ana-stat-value"><span id="ana-stat-enrolls">0</span> <span class="ana-stat-growth positive" id="ana-growth-enrolls">+0%</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-enrolls">0</span></div>
+                        </div>
+                    </div>
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon orange">🎓</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Tỷ lệ hoàn thành</div>
+                            <div class="ana-stat-value"><span id="ana-stat-rate">0%</span> <span class="ana-stat-growth positive" id="ana-growth-rate">+0%</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-rate">0%</span></div>
+                        </div>
+                    </div>
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon red">📜</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Chứng chỉ đã cấp</div>
+                            <div class="ana-stat-value"><span id="ana-stat-certs">0</span> <span class="ana-stat-growth positive" id="ana-growth-certs">+0%</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-certs">0</span></div>
+                        </div>
+                    </div>
+                    <div class="ana-stat-card">
+                        <div class="ana-stat-icon teal">📈</div>
+                        <div class="ana-stat-content">
+                            <div class="ana-stat-title">Điểm trung bình</div>
+                            <div class="ana-stat-value"><span id="ana-stat-score">0</span> <span class="ana-stat-growth positive" id="ana-growth-score">+0</span></div>
+                            <div class="ana-stat-compare">So với năm trước: <span id="ana-prev-score">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Xu hướng hoàn thành đào tạo 🛈</div></div>
+                        <div class="card-body" style="position:relative; height:320px;">
+                            <canvas id="anaTrendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="card-title">Tỷ lệ hoàn thành theo phòng ban</div>
+                            <a href="#" style="font-size:12px; color:#3b82f6; text-decoration:none;">Xem chi tiết</a>
+                        </div>
+                        <div class="card-body" style="position:relative; height:320px;">
+                            <canvas id="anaDeptBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div style="display:grid; grid-template-columns: 1fr 1.5fr 1.5fr; gap: 24px; margin-bottom: 24px;">
+                    <!-- Category Doughnut -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Phân bổ khóa học theo danh mục</div></div>
+                        <div class="card-body" style="position:relative; height:280px; display:flex; align-items:center;">
+                            <div style="flex:1; position:relative; height:100%;">
+                                <canvas id="anaCategoryChart"></canvas>
+                                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
+                                    <div style="font-size:12px; color:#64748b;">Tổng số</div>
+                                    <div style="font-size:24px; font-weight:700; color:#0f172a;" id="ana-cat-total">0</div>
+                                </div>
+                            </div>
+                            <div id="anaCategoryLegend" style="width: 140px; font-size:12px; line-height:2;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top 5 Courses -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Top 5 khóa học được học nhiều nhất</div></div>
+                        <div class="card-body" style="padding:0;">
+                            <table class="ana-clean-table">
+                                <thead>
+                                    <tr><th>#</th><th>Khóa học</th><th>Lượt ghi danh</th><th>Tỷ lệ hoàn thành</th><th>Điểm TB</th></tr>
+                                </thead>
+                                <tbody id="anaTopCoursesBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Heatmap -->
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">Hoạt động học tập theo giờ trong ngày (Heatmap)</div></div>
+                        <div class="card-body">
+                            <div class="ana-heatmap-wrapper">
+                                <div class="ana-heatmap-y-labels">
+                                    <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+                                </div>
+                                <div class="ana-heatmap-container">
+                                    <div class="ana-heatmap-x-labels">
+                                        <span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span><span>12</span><span>14</span><span>16</span><span>18</span><span>20</span><span>22</span>
+                                    </div>
+                                    <div class="ana-heatmap-grid" id="anaHeatmapGrid"></div>
+                                </div>
+                            </div>
+                            <div class="ana-heatmap-legend">
+                                <span>Ít hoạt động</span>
+                                <div class="ana-heatmap-legend-scale">
+                                    <div style="background:#e0e7ff;"></div>
+                                    <div style="background:#c7d2fe;"></div>
+                                    <div style="background:#a5b4fc;"></div>
+                                    <div style="background:#818cf8;"></div>
+                                    <div style="background:#6366f1;"></div>
+                                    <div style="background:#4f46e5;"></div>
+                                </div>
+                                <span>Nhiều hoạt động</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="card">
+                    <div class="card-header"><div class="card-title">Danh sách khóa học có tỷ lệ hoàn thành thấp</div></div>
+                    <div class="card-body" style="padding:0;">
+                        <table class="ana-clean-table">
+                            <thead>
+                                <tr><th>#</th><th>Khóa học</th><th>Phòng ban</th><th>Lượt ghi danh</th><th>Tỷ lệ hoàn thành</th><th>Điểm TB</th><th>Hành động</th></tr>
+                            </thead>
+                            <tbody id="anaLowCoursesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OTHER TABS (Placeholder) -->
+            <div id="ana-tab-departments" class="ana-tab-content" style="display: none;">
+                <div class="card"><div class="card-body">Nội dung chi tiết tab Phòng ban...</div></div>
+            </div>
+            <div id="ana-tab-courses" class="ana-tab-content" style="display: none;">
+                <div class="card"><div class="card-body">Nội dung chi tiết tab Khóa học...</div></div>
+            </div>
+            <div id="ana-tab-exams" class="ana-tab-content" style="display: none;">
+                <div class="card"><div class="card-body">Nội dung chi tiết tab Bài thi...</div></div>
+            </div>
+            <div id="ana-tab-users" class="ana-tab-content" style="display: none;">
+                <div class="card"><div class="card-body">Nội dung chi tiết tab Nhân viên...</div></div>
+            </div>
+            <div id="ana-tab-reports" class="ana-tab-content" style="display: none;">
+                <div class="card"><div class="card-body">Giao diện báo cáo tùy chỉnh...</div></div>
             </div>
         </div>
     </div>
@@ -843,6 +1026,14 @@
                 <div style="display: flex; gap: 8px;">
                     <input type="text" id="aiPrompt" class="form-input" placeholder="VD: Kỹ năng Telesale...">
                     <button class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); border:none;" onclick="generateWithAI()" id="btnGenerateAI">🚀 Tạo</button>
+                </div>
+                <div style="margin-top: 10px; border-top: 1px dashed rgba(139,92,246,0.3); padding-top: 10px;">
+                    <label class="form-label" style="color: #2563eb; font-size: 0.85rem;"> Tạo khóa học tự động từ file Word (.docx)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="file" id="itAiCourseWordFile" accept=".docx" class="form-input" style="padding: 4px; background: #fff;">
+                        <button class="btn" style="white-space: nowrap; background: #2563eb; color: #fff; border: none;" onclick="itImportCourseFromWordAI()" id="btnItImportWordAI">Nhập AI</button>
+                    </div>
+                    <small style="color: #64748b;">AI sẽ tự động đọc nội dung file Word và tạo toàn bộ khóa học, chương học, bài học và bộ câu hỏi kiểm tra.</small>
                 </div>
             </div>
             <input type="hidden" id="courseModalId">
@@ -1685,6 +1876,7 @@
 
 @section Scripts {
 <script src="~/js/it-dashboard.js?v=@DateTime.Now.Ticks"></script>
+<script src="~/js/it-analytics.js?v=@DateTime.Now.Ticks"></script>
 <script>
     async function triggerForceSeed() {
         const result = await Swal.fire({

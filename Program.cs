@@ -90,6 +90,7 @@ using (var scope = app.Services.CreateScope())
         context.Database.EnsureCreated();
         await context.Database.ExecuteSqlRawAsync(DatabaseCompatibility.SchemaPatchSql);
         await KhoaHoc.Infrastructure.DatabaseSeeder.SeedAsync(context, forceReset: false);
+        await KhoaHoc.Infrastructure.AdvancedAnalyticsSeeder.SeedAnalyticsDataAsync(context);
     }
     catch (Exception ex)
     {

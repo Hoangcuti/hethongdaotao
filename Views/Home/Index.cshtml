@@ -1,5 +1,5 @@
 @{
-    ViewData["Title"] = "Corporate LMS - Nền Tảng Đào Tạo Nội Bộ Toàn Diện";
+    ViewData["Title"] = "Xôi Ngô Edu - Nền Tảng Đào Tạo Nội Bộ Toàn Diện";
     Layout = null; // Bỏ qua layout admin mặc định
 }
 <!DOCTYPE html>
@@ -7,37 +7,37 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Corporate LMS - Tối Ưu Hóa Năng Lực Đội Ngũ</title>
+    <title>Xôi Ngô Edu - Tối Ưu Hóa Năng Lực Đội Ngũ</title>
     <meta name="description" content="Hệ thống quản lý đào tạo nội bộ doanh nghiệp toàn diện. Số hóa quy trình học tập, tối ưu hóa tri thức và bứt phá hiệu năng nhân sự." />
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts - Be Vietnam Pro hỗ trợ tiếng Việt đầy đủ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@@phosphor-icons/web"></script>
 
     <style>
         :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --primary-glow: rgba(79, 70, 229, 0.4);
-            --secondary: #06B6D4;
-            --secondary-glow: rgba(6, 182, 212, 0.3);
-            --accent-pain: #F43F5E;
-            --accent-pain-glow: rgba(244, 63, 94, 0.15);
-            --accent-sol: #10B981;
-            --accent-sol-glow: rgba(16, 185, 129, 0.15);
-            --dark: #090a0f;
-            --dark-light: #131520;
-            --dark-card: #1c1f30;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --font-display: 'Outfit', sans-serif;
-            --font-text: 'Inter', sans-serif;
+            --primary: #0071E3;
+            --primary-hover: #0077ED;
+            --primary-glow: rgba(0, 113, 227, 0.35);
+            --secondary: #30D158;
+            --secondary-glow: rgba(48, 209, 88, 0.25);
+            --accent-pain: #FF453A;
+            --accent-pain-glow: rgba(255, 69, 58, 0.14);
+            --accent-sol: #30D158;
+            --accent-sol-glow: rgba(48, 209, 88, 0.14);
+            --dark: #08090e;
+            --dark-light: #111318;
+            --dark-card: #191c26;
+            --text-main: #f5f5f7;
+            --text-muted: #8e8e93;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.10);
+            --font-display: 'Be Vietnam Pro', 'Outfit', sans-serif;
+            --font-text: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         * {
@@ -52,12 +52,15 @@
             background-color: var(--dark);
             color: var(--text-main);
             overflow-x: hidden;
-            line-height: 1.6;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         h1, h2, h3, h4, .font-display {
             font-family: var(--font-display);
-            letter-spacing: -0.02em;
+            letter-spacing: -0.025em;
+            font-weight: 700;
         }
 
         /* --- Background Mesh Animation --- */
@@ -90,23 +93,23 @@
         /* --- Navigation --- */
         header {
             position: fixed;
-            top: 20px;
+            top: 16px;
             left: 50%;
             transform: translateX(-50%);
-            width: 90%;
-            max-width: 1200px;
-            padding: 16px 32px;
-            background: rgba(13, 14, 21, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
+            width: 92%;
+            max-width: 1180px;
+            padding: 14px 28px;
+            background: rgba(10, 11, 18, 0.72);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.11);
             border-radius: 100px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         header.scrolled {
@@ -116,8 +119,9 @@
             border-left: none;
             border-right: none;
             border-top: none;
-            background: rgba(9, 10, 15, 0.9);
-            padding: 14px 5%;
+            background: rgba(8, 9, 14, 0.92);
+            padding: 12px 5%;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.3);
         }
 
         .brand {
@@ -157,25 +161,25 @@
         }
 
         .btn-nav-login {
-            padding: 10px 24px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid var(--glass-border);
+            padding: 10px 22px;
+            background: linear-gradient(180deg, var(--primary-hover) 0%, var(--primary) 100%);
+            border: 1px solid rgba(255,255,255,0.15);
             color: #fff;
             border-radius: 50px;
             font-size: 14px;
             font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 4px 14px rgba(0, 113, 227, 0.38);
         }
 
         .btn-nav-login:hover {
-            background: #fff;
-            color: var(--dark);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+            background: linear-gradient(180deg, #1a8bff 0%, var(--primary-hover) 100%);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 22px rgba(0, 113, 227, 0.5);
         }
 
         /* --- Global Sections --- */
@@ -288,20 +292,21 @@
 
         .btn-primary {
             padding: 16px 36px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: linear-gradient(180deg, var(--primary-hover) 0%, var(--primary) 100%);
             color: #fff;
             border-radius: 50px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             display: inline-flex;
             align-items: center;
             gap: 10px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 8px 22px rgba(0, 113, 227, 0.42);
+            letter-spacing: -0.01em;
         }
 
         .btn-primary::before {
@@ -309,13 +314,14 @@
             position: absolute;
             top: 0; left: -100%;
             width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-            transition: left 0.6s ease;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
         }
 
         .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(79, 70, 229, 0.55);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 14px 28px rgba(0, 113, 227, 0.55);
+            background: linear-gradient(180deg, #1a8bff 0%, var(--primary-hover) 100%);
         }
 
         .btn-primary:hover::before {
@@ -324,23 +330,25 @@
 
         .btn-secondary {
             padding: 16px 36px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--glass-border);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255,255,255,0.14);
+            color: #f5f5f7;
             border-radius: 50px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            letter-spacing: -0.01em;
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.09);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.24);
             transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
         }
 
         /* --- Interactive Mockup Dashboard (Hero Right) --- */
@@ -949,7 +957,7 @@
     <header id="header">
         <a href="/" class="brand">
             <i class="ph-fill ph-graduation-cap"></i>
-            Corporate LMS
+            Xôi Ngô Edu
         </a>
         <ul class="nav-menu">
             <li><a href="#pain-points" class="nav-link">Nỗi Đau Doanh Nghiệp</a></li>
@@ -968,7 +976,7 @@
                 <div class="hero-badge">
                     <span></span> Nền tảng học tập nội bộ thế hệ mới
                 </div>
-                <h1>Corporate LMS <br><span class="hero-gradient">Nâng tầm năng lực đội ngũ</span></h1>
+                <h1>Xôi Ngô Edu <br><span class="hero-gradient">Nâng tầm năng lực đội ngũ</span></h1>
                 <p>Giải pháp tối ưu hóa đào tạo nội bộ toàn diện cho mọi quy mô doanh nghiệp. Rút ngắn khoảng cách tri thức, tự động hóa lộ trình phát triển và bứt phá hiệu năng làm việc của nhân sự.</p>
                 <div class="hero-actions">
                     <a href="/Auth/Login" class="btn-primary">
@@ -1088,7 +1096,7 @@
         <div class="section-tag sol">
             <i class="ph-bold ph-check-circle"></i> Giải pháp tối ưu
         </div>
-        <h2 class="section-title">Corporate LMS - Số hóa học tập nội bộ</h2>
+        <h2 class="section-title">Xôi Ngô Edu - Số hóa học tập nội bộ</h2>
         <p class="section-desc">Giải pháp phần mềm toàn diện giúp thay đổi hoàn toàn cách doanh nghiệp phân phối tri thức và phát triển kỹ năng nhân viên.</p>
 
         <div class="sol-grid">
@@ -1196,7 +1204,7 @@
             <div class="footer-brand">
                 <a href="/" class="brand">
                     <i class="ph-fill ph-graduation-cap"></i>
-                    Corporate LMS
+                    Xôi Ngô Edu
                 </a>
                 <p>Nền tảng đào tạo nội bộ tối ưu giúp nâng tầm tri thức và năng lực nhân sự của mọi doanh nghiệp Việt Nam.</p>
             </div>
@@ -1222,7 +1230,7 @@
 
         <div class="copyright-container">
             <span class="copyright-text">
-                &copy; @DateTime.Now.Year Corporate LMS Pro. All rights reserved.
+                &copy; @DateTime.Now.Year Xôi Ngô Edu. All rights reserved.
             </span>
             <div class="social-links">
                 <a href="#" class="social-link"><i class="ph-bold ph-facebook-logo"></i></a>

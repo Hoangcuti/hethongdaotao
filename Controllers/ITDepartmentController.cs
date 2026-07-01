@@ -142,9 +142,16 @@ public partial class ITController : Controller
             return BadRequest(new { title = "Không thể xóa", error = "Phòng ban này đang có nhân viên. Vui lòng điều chuyển hoặc xóa nhân viên trước khi xóa phòng ban." });
         }
 
-        _db.Departments.Remove(dept);
-        await _db.SaveChangesAsync();
-        return Ok(new { success = true });
+        try
+        {
+            _db.Departments.Remove(dept);
+            await _db.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { title = "Không thể xóa", error = "Phòng ban này đang được sử dụng trong các khóa học, bài thi, chương học hoặc dữ liệu liên kết khác trong hệ thống. Vui lòng gỡ bỏ các liên kết này trước khi xóa." });
+        }
     }
     [HttpGet("/api/it/jobtitles")]
     public async Task<IActionResult> GetJobTitles()

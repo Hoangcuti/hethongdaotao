@@ -194,6 +194,7 @@ public partial class ITController : Controller
             await _db.Database.ExecuteSqlRawAsync("DELETE FROM CourseModules WHERE CourseID = {0}", id);
 
             // 3. Xóa các quan hệ mức khóa học
+            await _db.Database.ExecuteSqlRawAsync("DELETE FROM DocumentLibrary WHERE CourseID = {0}", id);
             await _db.Database.ExecuteSqlRawAsync("DELETE FROM Enrollments WHERE CourseID = {0}", id);
             await _db.Database.ExecuteSqlRawAsync("DELETE FROM Certificates WHERE CourseID = {0}", id);
             await _db.Database.ExecuteSqlRawAsync("DELETE FROM CourseFeedback WHERE CourseID = {0}", id);

@@ -19,10 +19,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - LMS Corporate</title>
+    <title>@ViewData["Title"] - Xôi Ngô Edu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/@@phosphor-icons/web"></script>
     <style>
         .swal2-popup { border-radius: 18px !important; font-family: var(--font-text) !important; }
         .swal2-title { font-family: var(--font-display) !important; font-weight: 600 !important; }
@@ -38,9 +42,9 @@
         <aside class="sidebar" id="appSidebar">
             <div class="sidebar-brand">
                 <a href="/" class="sidebar-logo">
-                    <span class="sidebar-logo-icon">LMS</span>
+                    <img src="/favicon.ico" alt="Logo" class="sidebar-logo-icon" style="width: 36px; height: 36px; border-radius: 8px; object-fit: contain; background: white; padding: 2px;" />
                     <span class="sidebar-logo-text">
-                        <span class="brand-name">Corporate LMS</span>
+                        <span class="brand-name">Xôi Ngô Edu</span>
                         <span class="brand-sub">@roleLabel workspace</span>
                     </span>
                 </a>
@@ -51,7 +55,7 @@
                 <ul>
                     <li class="nav-item">
                         <a class="nav-link active" onclick="location.href='@Url.Action("Index", role == "IT" ? "IT" : "HR")'">
-                            <span class="nav-icon">⌂</span>
+                            <span class="nav-icon"><i class="ph ph-house"></i></span>
                             <span class="nav-text">Dashboard</span>
                         </a>
                     </li>
@@ -63,21 +67,21 @@
                     <ul>
                         @if (role == "Manager")
                         {
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('members')"><span class="nav-icon">◉</span><span class="nav-text">Nhân viên</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('members')"><span class="nav-icon"><i class="ph ph-users"></i></span><span class="nav-text">Nhân viên</span></a></li>
                         }
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khóa học</span></a></li>
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bài thi</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('courses')"><span class="nav-icon"><i class="ph ph-books"></i></span><span class="nav-text">Khóa học</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('exams')"><span class="nav-icon"><i class="ph ph-exam"></i></span><span class="nav-text">Bài thi</span></a></li>
                         @if (role == "Manager")
                         {
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('assignments')"><span class="nav-icon">↗</span><span class="nav-text">Phân công</span></a></li>
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('staff-progress')"><span class="nav-icon">◔</span><span class="nav-text">Tiến độ</span></a></li>
-                            <li class="nav-item"><a class="nav-link" onclick="navigate('hr-notifications')"><span class="nav-icon">&#128276;</span><span class="nav-text">Thông báo</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('assignments')"><span class="nav-icon"><i class="ph ph-arrow-up-right"></i></span><span class="nav-text">Phân công</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('staff-progress')"><span class="nav-icon"><i class="ph ph-chart-pie"></i></span><span class="nav-text">Tiến độ</span></a></li>
+                            <li class="nav-item"><a class="nav-link" onclick="navigate('hr-notifications')"><span class="nav-icon"><i class="ph ph-bell"></i></span><span class="nav-text">Thông báo</span></a></li>
                             @if (deptName == "Trung tâm Đào tạo Nội bộ")
                             {
-                                <li class="nav-item"><a class="nav-link" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phê duyệt</span></a></li>
+                                <li class="nav-item"><a class="nav-link" onclick="navigate('approvals')"><span class="nav-icon"><i class="ph ph-check-circle"></i></span><span class="nav-text">Phê duyệt</span></a></li>
                             }
                         }
-                        <li class="nav-item"><a class="nav-link" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tài liệu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" onclick="navigate('documents')"><span class="nav-icon"><i class="ph ph-folder"></i></span><span class="nav-text">Tài liệu</span></a></li>
                     </ul>
                 }
 
@@ -85,24 +89,23 @@
                 {
                     <div class="nav-section-label">Quản trị</div>
                     <ul>
-                        <li class="nav-item"><a class="nav-link" data-permission="users.manage" data-nav-page="users" onclick="navigate('users')"><span class="nav-icon">◉</span><span class="nav-text">Người dùng</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="departments.manage" data-nav-page="departments" onclick="navigate('departments')"><span class="nav-icon">⌘</span><span class="nav-text">Phòng ban</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="courses" onclick="navigate('courses')"><span class="nav-icon">▤</span><span class="nav-text">Khóa học</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="exams" onclick="navigate('exams')"><span class="nav-icon">📝</span><span class="nav-text">Bài thi</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="categories.manage" data-nav-page="categories" onclick="navigate('categories')"><span class="nav-icon">◇</span><span class="nav-text">Danh mục</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="faqs.manage" data-nav-page="faqs" onclick="navigate('faqs')"><span class="nav-icon">?</span><span class="nav-text">FAQ</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="content.documents.manage" data-nav-page="documents" onclick="navigate('documents')"><span class="nav-icon">≣</span><span class="nav-text">Tài liệu</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-nav-page="approvals" onclick="navigate('approvals')"><span class="nav-icon">✓</span><span class="nav-text">Phê duyệt</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="users.manage" data-nav-page="users" onclick="navigate('users')"><span class="nav-icon"><i class="ph ph-user"></i></span><span class="nav-text">Người dùng</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="departments.manage" data-nav-page="departments" onclick="navigate('departments')"><span class="nav-icon"><i class="ph ph-buildings"></i></span><span class="nav-text">Phòng ban</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="courses" onclick="navigate('courses')"><span class="nav-icon"><i class="ph ph-book-open"></i></span><span class="nav-text">Khóa học</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="courses.manage" data-nav-page="exams" onclick="navigate('exams')"><span class="nav-icon"><i class="ph ph-exam"></i></span><span class="nav-text">Bài thi</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="categories.manage" data-nav-page="categories" onclick="navigate('categories')"><span class="nav-icon"><i class="ph ph-squares-four"></i></span><span class="nav-text">Danh mục</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="faqs.manage" data-nav-page="faqs" onclick="navigate('faqs')"><span class="nav-icon"><i class="ph ph-question"></i></span><span class="nav-text">FAQ</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="content.documents.manage" data-nav-page="documents" onclick="navigate('documents')"><span class="nav-icon"><i class="ph ph-folder"></i></span><span class="nav-text">Tài liệu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-nav-page="approvals" onclick="navigate('approvals')"><span class="nav-icon"><i class="ph ph-check-circle"></i></span><span class="nav-text">Phê duyệt</span></a></li>
                     </ul>
 
                     <div class="nav-section-label">Vận hành</div>
                     <ul>
-                        <li class="nav-item"><a class="nav-link" data-permission="analytics.view" data-nav-page="analytics" onclick="navigate('analytics')"><span class="nav-icon">◔</span><span class="nav-text">Phân tích</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="auditlogs.view" data-nav-page="auditlogs" onclick="navigate('auditlogs')"><span class="nav-icon">☰</span><span class="nav-text">Nhật ký hệ thống</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="backup.manage" data-nav-page="backup" onclick="navigate('backup')"><span class="nav-icon">⎘</span><span class="nav-text">Sao lưu</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="newsletter.manage" data-nav-page="newsletter" onclick="navigate('newsletter')"><span class="nav-icon">✦</span><span class="nav-text">Thông báo hệ thống</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="permissions.manage" data-nav-page="permissions" onclick="navigate('permissions')"><span class="nav-icon">🔑</span><span class="nav-text">Phân quyền</span></a></li>
-                        <li class="nav-item"><a class="nav-link" data-permission="settings.manage" data-nav-page="settings" onclick="navigate('settings')"><span class="nav-icon">⚙</span><span class="nav-text">Cài đặt</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="analytics.view" data-nav-page="analytics" onclick="navigate('analytics')"><span class="nav-icon"><i class="ph ph-chart-bar"></i></span><span class="nav-text">Phân tích</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="auditlogs.view" data-nav-page="auditlogs" onclick="navigate('auditlogs')"><span class="nav-icon"><i class="ph ph-list-dashes"></i></span><span class="nav-text">Nhật ký hệ thống</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="backup.manage" data-nav-page="backup" onclick="navigate('backup')"><span class="nav-icon"><i class="ph ph-database"></i></span><span class="nav-text">Sao lưu</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="newsletter.manage" data-nav-page="newsletter" onclick="navigate('newsletter')"><span class="nav-icon"><i class="ph ph-envelope-simple"></i></span><span class="nav-text">Thông báo hệ thống</span></a></li>
+                        <li class="nav-item"><a class="nav-link" data-permission="settings.manage" data-nav-page="settings" onclick="navigate('settings')"><span class="nav-icon"><i class="ph ph-gear"></i></span><span class="nav-text">Cài đặt</span></a></li>
                     </ul>
                 }
 
@@ -110,7 +113,7 @@
                 <ul>
                     <li class="nav-item">
                         <a class="nav-link" href="/Auth/Logout">
-                            <span class="nav-icon">↩</span>
+                            <span class="nav-icon"><i class="ph ph-sign-out"></i></span>
                             <span class="nav-text">Đăng xuất</span>
                         </a>
                     </li>
@@ -120,7 +123,7 @@
                 <ul>
                     <li class="nav-item">
                         <button id="themeToggleBtn" type="button" class="nav-link" onclick="toggleTheme()">
-                            <span class="nav-icon">☀</span>
+                            <span class="nav-icon"><i class="ph ph-moon"></i></span>
                             <span class="nav-text">Giao diện</span>
                         </button>
                     </li>
@@ -138,8 +141,8 @@
                     <div class="page-subtitle" id="pageSubtitle">@deptName</div>
                 </div>
                 <div class="topbar-actions">
-                    <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" aria-label="Open navigation" onclick="setSidebarOpen(true)">☰</button>
-                    <button type="button" class="btn btn-secondary btn-icon mobile-only" aria-label="Notifications">🔔</button>
+                    <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" aria-label="Open navigation" onclick="setSidebarOpen(true)"><i class="ph ph-list"></i></button>
+                    <button type="button" class="btn btn-secondary btn-icon mobile-only" aria-label="Notifications"><i class="ph ph-bell"></i></button>
                     <div class="topbar-user">
                         <span class="topbar-avatar">@initials</span>
                         <div class="topbar-user-copy">

@@ -21,6 +21,7 @@ public partial class ITController : Controller
         try
         {
             await KhoaHoc.Infrastructure.DatabaseSeeder.SeedAsync(_db, forceReset: true);
+            await KhoaHoc.Infrastructure.AdvancedAnalyticsSeeder.SeedAnalyticsDataAsync(_db);
             return Ok(new { success = true, message = "Gieo dữ liệu thực tế thành công!" });
         }
         catch (Exception ex)

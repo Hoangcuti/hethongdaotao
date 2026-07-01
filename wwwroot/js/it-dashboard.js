@@ -199,7 +199,10 @@ async function init() {
             refreshMyPermissionProfile().catch(e => console.error('Error refreshing permissions:', e))
         ]);
         console.log('IT Dashboard: Navigation to overview...');
-        navigate('overview');
+        // Khôi phục trang từ URL hash nếu có (giúp F5 giữ nguyên vị trí)
+        const hashPage = window.location.hash.replace('#', '').trim();
+        const validPages = ['overview','users','courses','exams','documents','schedules','departments','auditlogs','jobtitles','exports','categories','faqs','analytics','backup','permissions','newsletter','settings','approvals','attendance'];
+        navigate(validPages.includes(hashPage) ? hashPage : 'overview');
     } catch (e) {
         console.error('IT Dashboard: critical init failed, forcing overview navigation:', e);
         navigate('overview');
@@ -282,6 +285,13 @@ function navigate(page) {
     else if (page === 'attendance') {
         loadAttendanceEvents();
         loadAttendanceList();
+    }
+
+    // Lưu trang hiện tại vào URL hash để F5 giữ nguyên vị trí
+    if (history.replaceState) {
+        history.replaceState(null, '', '#' + page);
+    } else {
+        window.location.hash = page;
     }
 }
 
@@ -1762,6 +1772,58 @@ async function generateWithAI() {
     }
 }
 
+async function itImportCourseFromWordAI() {
+    const fileInput = document.getElementById('itAiCourseWordFile');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast('Vui lòng chọn file .docx để nhập AI.', 'warning');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    const btn = document.getElementById('btnItImportWordAI');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⌛ Đang xử lý...';
+
+    reader.onload = async function(e) {
+        const base64Data = e.target.result.split(',')[1];
+        let success = false;
+
+        try {
+            const response = await fetch('/api/it/ai-create-course-from-word', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ base64Data: base64Data })
+            });
+
+            const result = await response.json();
+            if (response.ok && result.success) {
+                showToast(`✅ Đã tạo thành công khóa học: ${result.title}`, 'success');
+                closeModal('courseModal');
+                success = true;
+            } else {
+                showToast(result.error || result.message || 'Lỗi khi nhập khóa học bằng AI.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            showToast('Lỗi kết nối khi gửi file lên AI.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            fileInput.value = '';
+        }
+
+        // Tải lại danh sách khóa học bên ngoài try-catch để tránh hiển thị lỗi sai
+        if (success) {
+            try { await loadItCourses(); } catch (_) {}
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
 async function submitCourse() {
     const id = document.getElementById('courseModalId').value;
     const isEdit = !!id;
@@ -2689,6 +2751,14 @@ async function refreshFaqCatDropdown(selectedId) {
     } catch (e) { }
 }
 
+async function loadAnalytics() {
+    if (window.analyticsModule) {
+        window.analyticsModule.init();
+    } else {
+        console.warn("analyticsModule not found, please check if it-analytics.js is loaded.");
+    }
+}
+
 async function submitFaq() {
     const id = document.getElementById('faqModalId').value;
     const body = {
@@ -2722,123 +2792,7 @@ async function deleteFaq(id) {
 // ============================================================
 // ANALYTICS
 // ============================================================
-let analyticsCharts = {};
-async function loadAnalytics() {
-    try {
-        const data = await apiFetch('/api/it/analytics');
-        const style = getComputedStyle(document.documentElement);
-        const primaryColor = style.getPropertyValue('--color-primary').trim() || '#0066cc';
-        const successColor = style.getPropertyValue('--color-success').trim() || '#11875d';
-        const warningColor = style.getPropertyValue('--color-warning').trim() || '#b96a00';
-        const dangerColor = style.getPropertyValue('--color-danger').trim() || '#c43c2f';
-        const infoColor = style.getPropertyValue('--color-info').trim() || '#2454cc';
-        const accentColor = style.getPropertyValue('--color-accent').trim() || '#2997ff';
-        const textColor = style.getPropertyValue('--color-text').trim() || '#1d1d1f';
-        const textMuted = style.getPropertyValue('--color-text-muted').trim() || '#7a7a7a';
-        const borderColor = style.getPropertyValue('--border-color').trim() || 'rgba(0,0,0,0.08)';
-
-        if (data.userByDept && data.userByDept.length) {
-            const ctx1 = document.getElementById('deptChart').getContext('2d');
-            if (analyticsCharts.dept) analyticsCharts.dept.destroy();
-            analyticsCharts.dept = new Chart(ctx1, {
-                type: 'bar',
-                data: {
-                    labels: data.userByDept.map(d => d.department),
-                    datasets: [{
-                        label: 'Nhân viên', data: data.userByDept.map(d => d.userCount),
-                        backgroundColor: primaryColor, borderRadius: 8
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: borderColor }, ticks: { color: textMuted } },
-                        x: { grid: { display: false }, ticks: { color: textMuted } }
-                    }
-                }
-            });
-        }
-
-        if (data.courseByCategory && data.courseByCategory.length) {
-            const ctx2 = document.getElementById('catChart').getContext('2d');
-            if (analyticsCharts.cat) analyticsCharts.cat.destroy();
-            analyticsCharts.cat = new Chart(ctx2, {
-                type: 'doughnut',
-                data: {
-                    labels: data.courseByCategory.map(c => c.category),
-                    datasets: [{
-                        data: data.courseByCategory.map(c => c.courseCount),
-                        backgroundColor: [primaryColor, successColor, warningColor, infoColor, dangerColor, accentColor], borderWidth: 0
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { color: textColor, font: { family: 'var(--font-text)', size: 11 } }
-                        }
-                    },
-                    cutout: '70%',
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-        }
-
-        if (data.enrollmentByMonth && data.enrollmentByMonth.length) {
-            const ctx3 = document.getElementById('enrollChart').getContext('2d');
-            if (analyticsCharts.enroll) analyticsCharts.enroll.destroy();
-            analyticsCharts.enroll = new Chart(ctx3, {
-                type: 'line',
-                data: {
-                    labels: data.enrollmentByMonth.map(e => `${e.month}/${e.year}`),
-                    datasets: [{
-                        label: 'Lượt đăng ký', data: data.enrollmentByMonth.map(e => e.count),
-                        borderColor: primaryColor, backgroundColor: style.getPropertyValue('--color-primary-soft').trim() || 'rgba(0,102,204,0.1)', fill: true, tension: 0.4
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: borderColor }, ticks: { color: textMuted } },
-                        x: { grid: { display: false }, ticks: { color: textMuted } }
-                    }
-                }
-            });
-        }
-
-        const es = data.examStats;
-        if (es && es.total > 0) {
-            const ctx4 = document.getElementById('examChart').getContext('2d');
-            if (analyticsCharts.exam) analyticsCharts.exam.destroy();
-            analyticsCharts.exam = new Chart(ctx4, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Đạt', 'Không đạt'],
-                    datasets: [{ data: [es.passed, es.failed], backgroundColor: [successColor, dangerColor], borderWidth: 0 }]
-                },
-                options: {
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { color: textColor, font: { family: 'var(--font-text)' } }
-                        }
-                    },
-                    cutout: '70%',
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            document.getElementById('examStatText').textContent = `Tỉ lệ pass: ${es.passRate}% (${es.passed}/${es.total} lượt thi)`;
-        } else {
-            document.getElementById('examStatText').textContent = 'Chưa có dữ liệu thi';
-        }
-
-        document.getElementById('topCoursesTable').innerHTML = (data.topCourses || []).map((c, i) =>
-            `<tr><td><strong>#${i + 1}</strong></td><td>${c.title}</td><td><span class="badge badge-info">${c.enrollments} học viên</span></td></tr>`
-        ).join('') || '<tr><td colspan="3" style="text-align:center">Chưa có dữ liệu</td></tr>';
-    } catch (e) { showToast('Lỗi tải analytics: ' + e.message, 'error'); }
-}
+// Analytics is now handled by analyticsModule in it-analytics.js
 
 async function loadSchedules() {
     try {
