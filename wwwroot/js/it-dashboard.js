@@ -1,4 +1,4 @@
-let departments = [];
+﻿let departments = [];
 let userChart = null;
 let selectedUserIds = new Set();
 let availableRoles = [];
@@ -1079,183 +1079,379 @@ async function generateLessonWithAI(source) {
 
 async function loadOverview() {
     console.log('IT Dashboard: Loading overview data...');
-    const grid = document.getElementById('itStatsGrid');
-    const logs = document.getElementById('recentLogs');
-    const leaderboard = document.getElementById('deptLeaderboard');
+    const grid = document.querySelector('.adm-metrics-grid');
+    const timelineEl = document.getElementById('admActivityTimeline');
+    const consoleEl = document.getElementById('admConsoleLogs');
+    const healthEl = document.getElementById('admSystemHealth');
+    const notifList = document.getElementById('admNotificationsList');
+    const notifUnread = document.getElementById('adm-notif-unread-count');
+    const pendingGrid = document.getElementById('admPendingGrid');
 
     try {
-        const [stats, activeStats] = await Promise.all([
+        const [stats, health, notifsData, auditData] = await Promise.all([
             apiFetch('/api/it/stats').catch(e => { console.error('Stats API fail:', e); return {}; }),
-            apiFetch('/api/it/users/active-stats').catch(e => { console.error('Active Stats API fail:', e); return {}; })
+            apiFetch('/api/it/system-health').catch(e => { console.error('System Health API fail:', e); return null; }),
+            apiFetch('/api/it/notifications').catch(e => { console.error('Notifications API fail:', e); return null; }),
+            apiFetch('/api/it/auditlogs?pageSize=7').catch(e => ({ logs: [] }))
         ]);
 
-        if (grid) {
+        const dateWelcomeEl = document.getElementById('admDateWelcome');
+        const tasksWelcomeEl = document.getElementById('admWelcomeTasks');
+        const notifsWelcomeEl = document.getElementById('admWelcomeNotifs');
+        const headerSyncTimeEl = document.getElementById('headerSyncTime');
+
+        if (dateWelcomeEl) {
+            const today = new Date();
+            const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+            dateWelcomeEl.innerText = `${days[today.getDay()]}, ${today.toLocaleDateString('vi-VN')}`;
+        }
+        if (headerSyncTimeEl) {
+            const now = new Date();
+            headerSyncTimeEl.innerText = `${now.toLocaleDateString('vi-VN')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+        if (tasksWelcomeEl && stats && stats.pendingTasks) {
+            const pt = stats.pendingTasks;
+            const totalPending = pt.courses + pt.documents + pt.enrollments + pt.certificates;
+            tasksWelcomeEl.innerText = `${totalPending} công việc cần xử lý`;
+        }
+        if (notifsWelcomeEl && notifsData) {
+            notifsWelcomeEl.innerText = `${notifsData.unreadCount || 0} thông báo mới`;
+        }
+
+        // Render stats core grid (7 items)
+        if (grid && stats) {
             grid.innerHTML = `
-                <div class="stat-card blue">
-                    <div class="stat-icon blue">👥</div>
-                    <div class="stat-value">${fmtNumber(stats.totalUsers || 0)}</div>
-                    <div class="stat-label">Nhân sự</div>
+                <div class="adm-metric-card text-blue" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng người dùng</span>
+                        <span style="font-size:28px;">👥</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalUsers || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Toàn hệ thống</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
                 </div>
-                <div class="stat-card green">
-                    <div class="stat-icon green">🏢</div>
-                    <div class="stat-value">${fmtNumber(stats.totalDepartments || 0)}</div>
-                    <div class="stat-label">Phòng ban</div>
+                <div class="adm-metric-card text-green" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng HR</span>
+                        <span style="font-size:28px;">💼</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalHr || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Vai trò HR</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
                 </div>
-                <div class="stat-card purple">
-                    <div class="stat-icon purple">▤</div>
-                    <div class="stat-value">${fmtNumber(stats.totalCourses || 0)}</div>
-                    <div class="stat-label">Khóa học</div>
+                <div class="adm-metric-card text-purple" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng học viên</span>
+                        <span style="font-size:28px;">🎓</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalStudents || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Vai trò Student</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
                 </div>
-                <div class="stat-card orange" style="--card-accent:#f59e0b">
-                    <div class="stat-icon" style="background:rgba(245,158,11,.12);color:#d97706">📝</div>
-                    <div class="stat-value">${fmtNumber(stats.totalExams || 0)}</div>
-                    <div class="stat-label">Đề thi</div>
+                <div class="adm-metric-card text-orange" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng khóa học</span>
+                        <span style="font-size:28px;">📘</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalCourses || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Đang vận hành</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
+                </div>
+                <div class="adm-metric-card text-teal" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng bài thi</span>
+                        <span style="font-size:28px;">📝</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalExams || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Đề thi đánh giá</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
+                </div>
+                <div class="adm-metric-card text-red" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng tài liệu</span>
+                        <span style="font-size:28px;">📁</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalDocuments || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Kho thư viện</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
+                </div>
+                <div class="adm-metric-card text-indigo" style="background:#fff; padding:16px 20px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-size:12px; font-weight:600; color:#64748b;">Tổng danh mục</span>
+                        <span style="font-size:28px;">🏷️</span>
+                    </div>
+                    <div style="font-size:22px; font-weight:700; color:#0f172a; line-height:1.2;">${fmtNumber(stats.totalCategories || 0)}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Phân loại chuyên môn</span><span style="font-size:10px; opacity:0.8;">Không có dữ liệu so sánh</span>
+                    </div>
                 </div>
             `;
         }
 
-        if (stats.studyDist && window.Chart) {
-            const ctx = document.getElementById('userChart')?.getContext('2d');
-            if (ctx) {
-                if (userChart) userChart.destroy();
-                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text').trim() || '#1d1d1f';
-                userChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(stats.studyDist),
-                        datasets: [{
-                            data: Object.values(stats.studyDist),
-                            backgroundColor: ['#10b981', '#f59e0b', '#94a3b8'],
-                            borderWidth: 0,
-                            borderRadius: 8,
-                            spacing: 3
-                        }]
-                    },
-                    options: {
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: { color: textColor, font: { family: 'var(--font-text)', size: 12 } }
-                            }
-                        },
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%'
-                    }
-                });
-            }
+        // Render Pending grid
+        if (pendingGrid && stats) {
+            const pt = stats.pendingTasks || { courses: 0, documents: 0, enrollments: 0, certificates: 0 };
+            const getBadge = (count) => {
+                if (count === 0) return `<span class="badge-status healthy" style="margin-top:4px;">🟢 Hoàn tất</span>`;
+                if (count > 10) return `<span class="badge-status critical" style="margin-top:4px;">🔴 Khẩn cấp</span>`;
+                return `<span class="badge-status warning" style="margin-top:4px;">🟠 Chờ xử lý</span>`;
+            };
+            
+            pendingGrid.innerHTML = `
+                <div class="adm-pending-card" onclick="navigate('approvals')" style="display:flex; gap:12px; align-items:center; padding:16px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size: 20px; padding:10px; background:#eff6ff; border-radius:8px; display:flex; align-items:center; justify-content:center;">📘</div>
+                    <div style="flex:1;">
+                        <div style="font-size: 12px; color: #64748b; font-weight:500;">Khóa học chờ duyệt</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px;">${pt.courses}</div>
+                    </div>
+                    <div>${getBadge(pt.courses)}</div>
+                </div>
+                <div class="adm-pending-card" onclick="navigate('approvals')" style="display:flex; gap:12px; align-items:center; padding:16px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size: 20px; padding:10px; background:#f0fdf4; border-radius:8px; display:flex; align-items:center; justify-content:center;">📄</div>
+                    <div style="flex:1;">
+                        <div style="font-size: 12px; color: #64748b; font-weight:500;">Tài liệu chờ duyệt</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px;">${pt.documents}</div>
+                    </div>
+                    <div>${getBadge(pt.documents)}</div>
+                </div>
+                <div class="adm-pending-card" onclick="navigate('approvals')" style="display:flex; gap:12px; align-items:center; padding:16px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size: 20px; padding:10px; background:#fef3c7; border-radius:8px; display:flex; align-items:center; justify-content:center;">👥</div>
+                    <div style="flex:1;">
+                        <div style="font-size: 12px; color: #64748b; font-weight:500;">Ghi danh chờ duyệt</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px;">${pt.enrollments}</div>
+                    </div>
+                    <div>${getBadge(pt.enrollments)}</div>
+                </div>
+                <div class="adm-pending-card" onclick="navigate('approvals')" style="display:flex; gap:12px; align-items:center; padding:16px; border:1px solid #f1f5f9; border-radius:10px; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size: 20px; padding:10px; background:#fee2e2; border-radius:8px; display:flex; align-items:center; justify-content:center;">📜</div>
+                    <div style="flex:1;">
+                        <div style="font-size: 12px; color: #64748b; font-weight:500;">Chứng chỉ chờ cấp</div>
+                        <div style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 2px;">${pt.certificates}</div>
+                    </div>
+                    <div>${getBadge(pt.certificates)}</div>
+                </div>
+            `;
         }
 
-        if (leaderboard) {
-            if (stats.departments && stats.departments.length > 0) {
-                let html = `
-                    <div class="table-wrapper" style="border: none; border-radius: 0; background: transparent;">
-                        <table class="lms-table" style="min-width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th>Tên phòng ban</th>
-                                    <th style="text-align: center;">Số nhân sự</th>
-                                    <th style="text-align: center;">Khóa học đăng ký</th>
-                                    <th style="text-align: center;">Hoàn thành</th>
-                                    <th style="width: 320px;">Tiến độ trung bình</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
+        // Render System Health
+        if (healthEl && health) {
+            const getHealthBadge = (percent) => {
+                if (percent >= 90) return `<span class="badge-status critical">🔴 Critical</span>`;
+                if (percent >= 75) return `<span class="badge-status warning">🟡 Warning</span>`;
+                return `<span class="badge-status healthy">🟢 Healthy</span>`;
+            };
+            healthEl.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items:center; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                            <span>Bộ nhớ Server (RAM) ${getHealthBadge(health.memory.percentage)}</span>
+                            <span>${health.memory.used} / ${health.memory.total}</span>
+                        </div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${health.memory.percentage}%; height: 100%; background: #3b82f6; border-radius: 4px; transition:width 1s;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items:center; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                            <span>CPU Usage ${getHealthBadge(health.cpu.percentage)}</span>
+                            <span>${health.cpu.usage}</span>
+                        </div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${health.cpu.percentage}%; height: 100%; background: #10b981; border-radius: 4px; transition:width 1s;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items:center; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 6px;">
+                            <span>Dung lượng ổ đĩa ${getHealthBadge(health.storage.percentage)}</span>
+                            <span>${health.storage.used} / ${health.storage.total}</span>
+                        </div>
+                        <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${health.storage.percentage}%; height: 100%; background: #f59e0b; border-radius: 4px; transition:width 1s;"></div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px dashed #e2e8f0; padding-top: 12px; margin-top: 4px;">
+                        <div style="font-size: 12px; color: #64748b;">
+                            Cơ sở dữ liệu: <strong style="color: #0f172a;">${health.database.size}</strong> (${health.database.provider})
+                        </div>
+                        <div style="font-size: 12px; color: #64748b;">
+                            Bản sao lưu cuối: <strong style="color: #0f172a;">${health.backupStatus.lastBackup}</strong>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b; grid-column: span 2;">
+                            Background Runner: <span class="badge-status healthy">● Active</span> (Đã xử lý ${health.backgroundJobs.completed} tác vụ, 0 thất bại)
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
 
-                html += stats.departments.map(d => `
-                    <tr>
-                        <td style="font-weight: 600; color: var(--color-text);">🏢 ${libraryEscape(d.departmentName)}</td>
-                        <td style="text-align: center;">${d.userCount}</td>
-                        <td style="text-align: center;">${d.enrollmentCount}</td>
-                        <td style="text-align: center;"><span class="badge badge-success">${d.completedCount}</span></td>
-                        <td>
-                            <div class="progress-wrap">
-                                <div class="progress-bar-track">
-                                    <div class="progress-bar-fill" style="width: ${d.avgProgress}%"></div>
-                                </div>
-                                <span style="font-size: 13px; font-weight: 700; color: var(--color-primary); min-width: 45px; text-align: right;">${d.avgProgress.toFixed(1)}%</span>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-
-                html += `
-                        </tbody>
-                    </table>
-                `;
-                leaderboard.innerHTML = html;
+        // Render Notifications list
+        if (notifList && notifsData) {
+            const unread = notifsData.unreadCount || 0;
+            const headerBadge = document.getElementById('headerNotifBadge');
+            
+            if (unread > 0) {
+                notifUnread.innerText = unread;
+                notifUnread.style.display = 'inline-block';
+                if (headerBadge) {
+                    headerBadge.innerText = unread > 9 ? '9+' : unread;
+                    headerBadge.style.display = 'flex';
+                }
             } else {
-                leaderboard.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8;">Chưa có dữ liệu phòng ban</div>';
+                notifUnread.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
+            }
+
+            if (notifsData.notifications && notifsData.notifications.length > 0) {
+                notifList.innerHTML = notifsData.notifications.map(n => {
+                    let icon = '🔔';
+                    let typeL = (n.title || '').toLowerCase();
+                    if (typeL.includes('khóa học')) icon = '📘';
+                    if (typeL.includes('tài liệu')) icon = '📄';
+                    if (typeL.includes('ghi danh')) icon = '👥';
+                    if (typeL.includes('người dùng')) icon = '👤';
+                    if (typeL.includes('bài thi')) icon = '📝';
+                    
+                    return `
+                    <div style="display:flex; justify-content:space-between; align-items:start; padding:10px 0; border-bottom:1px solid #f1f5f9; gap:12px;">
+                        <div style="flex:1; display:flex; gap:8px;">
+                            <span style="font-size:16px;">${icon}</span>
+                            <div>
+                                <div style="font-size:13px; font-weight:${n.isRead ? '500' : '700'}; color:${n.isRead ? '#475569' : '#0f172a'};">${libraryEscape(n.title)}</div>
+                            </div>
+                        </div>
+                        ${!n.isRead ? `<button class="btn-read" onclick="markNotificationRead(${n.id})" style="background:none; border:none; color:#3b82f6; font-size:11px; cursor:pointer; font-weight:700; white-space:nowrap; padding: 2px 6px;">Đánh dấu đọc</button>` : ''}
+                    </div>
+                `}).join('');
+            } else {
+                notifList.innerHTML = `
+                <div class="empty-state-modern">
+                    <div class="icon">📭</div>
+                    <div class="text">Chưa có thông báo nào</div>
+                </div>`;
             }
         }
 
-        const auditData = await apiFetch('/api/it/auditlogs?pageSize=7').catch(e => ({ logs: [] }));
-        if (logs) {
-            if (auditData.logs && auditData.logs.length > 0) {
-                let html = `
-                    <div class="recent-activity-wrapper">
-                        <table class="recent-activity-table">
-                            <thead>
-                                <tr>
-                                    <th>Người thực hiện</th>
-                                    <th>Hành động</th>
-                                    <th>Thời gian</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
+        // Render Short Console Logs terminal
+        if (consoleEl && auditData && auditData.logs) {
+            consoleEl.innerHTML = auditData.logs.slice(0, 5).map(l => {
+                let badgeClass = 'neutral';
+                let actionStr = l.actionType || '';
+                let aLower = actionStr.toLowerCase();
+                if (aLower.includes('tạo') || aLower.includes('create') || aLower.includes('add') || aLower.includes('thêm')) badgeClass = 'create';
+                else if (aLower.includes('cập nhật') || aLower.includes('update') || aLower.includes('sửa')) badgeClass = 'update';
+                else if (aLower.includes('xóa') || aLower.includes('delete') || aLower.includes('remove')) badgeClass = 'delete';
+                else if (aLower.includes('login') || aLower.includes('đăng nhập')) badgeClass = 'login';
+                else if (aLower.includes('backup') || aLower.includes('sao lưu')) badgeClass = 'backup';
+                else if (aLower.includes('duyệt') || aLower.includes('approve')) badgeClass = 'approve';
+                else if (aLower.includes('import') || aLower.includes('nhập')) badgeClass = 'import';
 
-                html += auditData.logs.map(l => {
-                    const actionLower = (l.actionType || '').toLowerCase();
-                    let badgeClass = 'info';
-                    let actionIcon = 'ℹ️';
-                    if (actionLower.includes('tạo') || actionLower.includes('thêm') || actionLower.includes('create') || actionLower.includes('insert')) {
-                        badgeClass = 'create';
-                        actionIcon = '➕';
-                    } else if (actionLower.includes('cập nhật') || actionLower.includes('sửa') || actionLower.includes('update') || actionLower.includes('edit')) {
-                        badgeClass = 'update';
-                        actionIcon = '✏️';
-                    } else if (actionLower.includes('xóa') || actionLower.includes('vô hiệu') || actionLower.includes('delete') || actionLower.includes('remove') || actionLower.includes('khóa')) {
-                        badgeClass = 'delete';
-                        actionIcon = '🗑️';
-                    } else if (actionLower.includes('đăng nhập') || actionLower.includes('login')) {
-                        badgeClass = 'login';
-                        actionIcon = '🔑';
-                    }
+                return `<div style="margin-bottom: 8px; font-size:12px; display:flex; gap:6px; align-items:center;">
+                    <span style="color: #64748b; font-family:monospace;">[${fmtDateTime(l.createdAt)}]</span> 
+                    <span style="color: #4ade80; font-weight:600; width:90px; overflow:hidden; text-overflow:ellipsis;">${l.userName}</span> 
+                    <span class="term-badge ${badgeClass}">${actionStr}</span> 
+                    <span style="color: #f8fafc; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${libraryEscape(l.description || '')}</span>
+                </div>`;
+            }).join('') || `
+                <div class="empty-state-modern" style="padding:16px;">
+                    <div class="icon" style="font-size:24px;">📟</div>
+                    <div class="text" style="color:#94a3b8; font-size:12px;">Không có nhật ký hoạt động nào</div>
+                </div>`;
+        }
 
-                    return `
-                        <tr>
-                            <td>
-                                <div class="recent-activity-user">${l.userName}</div>
-                                <div class="recent-activity-desc" title="${l.description || ''}">${l.description || ''}</div>
-                            </td>
-                            <td>
-                                <span class="action-badge ${badgeClass}">${actionIcon} ${l.actionType}</span>
-                            </td>
-                            <td>
-                                <span class="recent-activity-time">🕒 ${fmtDateTime(l.createdAt)}</span>
-                            </td>
-                        </tr>
-                    `;
-                }).join('');
-
-                html += `
-                            </tbody>
-                        </table>
+        // Render Timeline (without tables!)
+        if (timelineEl && auditData && auditData.logs) {
+            if (auditData.logs.length > 0) {
+                timelineEl.innerHTML = `
+                    <div style="display:flex; flex-direction:column; gap:16px; position:relative; padding-left:16px; border-left:2px solid #e2e8f0; margin-left:8px;">
+                        ${auditData.logs.map(l => {
+                            const actionLower = (l.actionType || '').toLowerCase();
+                            let color = '#3b82f6';
+                            if (actionLower.includes('tạo') || actionLower.includes('thêm') || actionLower.includes('create') || actionLower.includes('insert')) {
+                                color = '#10b981';
+                            } else if (actionLower.includes('xóa') || actionLower.includes('delete') || actionLower.includes('khóa')) {
+                                color = '#ef4444';
+                            } else if (actionLower.includes('sửa') || actionLower.includes('update')) {
+                                color = '#f59e0b';
+                            }
+                            return `
+                                <div class="timeline-item" style="position:relative;">
+                                    <span style="position:absolute; left:-23px; top:4px; display:inline-block; width:12px; height:12px; border-radius:50%; background:${color}; border:2px solid #fff; box-shadow:0 0 0 2px ${color}40;"></span>
+                                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#64748b; margin-bottom:2px;">
+                                        <strong style="color:#0f172a;">${l.userName}</strong>
+                                        <span>${fmtDateTime(l.createdAt)}</span>
+                                    </div>
+                                    <div style="font-size:13px; color:#334155;">
+                                        <span style="font-weight:600; color:${color};">${l.actionType}:</span> ${libraryEscape(l.description || '')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
-                logs.innerHTML = html;
             } else {
-                logs.innerHTML = '<div style="padding:40px;text-align:center;color:#7a7a7a;">Chưa có dữ liệu hoạt động gần đây</div>';
+                timelineEl.innerHTML = '<div style="padding:40px; text-align:center; color:#94a3b8; font-size:13px;">Chưa có hoạt động nào được ghi nhận</div>';
             }
         }
+
     } catch (e) {
         console.error('Critical Overview Load Error:', e);
         if (grid) grid.innerHTML = `<div class="card"><div class="card-body" style="color:#ef4444">Không tải được dashboard: ${e.message}</div></div>`;
     } finally {
-        // Luôn luôn đảm bảo ẩn spinner sau khi đã chạy xong try/catch
         document.querySelectorAll('.loading-overlay').forEach(overlay => overlay.style.display = 'none');
+    }
+}
+
+window.triggerQuickBackup = async function() {
+    Swal.fire({
+        title: 'Đang sao lưu Database...',
+        text: 'Vui lòng chờ trong giây lát.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    try {
+        const response = await apiFetch('/api/it/backuplogs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ backupType: 'Manual' })
+        });
+
+        if (response && response.success) {
+            Swal.fire('Thành công', 'Đã sao lưu Database thành công! File: ' + response.fileName, 'success');
+            loadOverview();
+        } else {
+            Swal.fire('Lỗi', 'Không thể tạo bản sao lưu.', 'error');
+        }
+    } catch (e) {
+        Swal.fire('Lỗi', 'Lỗi kết nối: ' + e.message, 'error');
+    }
+}
+
+window.markNotificationRead = async function(id) {
+    try {
+        await apiFetch(`/api/it/notifications/${id}/read`, { method: 'POST' });
+        loadOverview();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+    }
+}
+
+window.markAllNotificationsRead = async function() {
+    try {
+        await apiFetch(`/api/it/notifications/read-all`, { method: 'POST' });
+        loadOverview();
+    } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
     }
 }
 
@@ -1660,7 +1856,7 @@ async function deleteUser(id, username) {
             loadUsers(currentUsersPage);
         }
     } catch (e) {
-        showToast(e.message || 'Lỗi xóa tài khoản', 'error');
+        showToast(e.message || 'Lỗi xóa tài khoản', 'error', { title: 'Không thể xóa' });
     }
 }
 
@@ -2462,14 +2658,14 @@ async function submitExam() {
     if (!body.examTitle) { showToast('Yêu cầu nhập tên bài kiểm tra!', 'error'); return; }
     try {
         const finalBody = { ...body, aiQuestions: lastGeneratedQuestions };
-        await apiFetch(`/api/it/courses/${currentContentCourseId}/exams`, { method: 'POST', body: JSON.stringify(finalBody) });
+        await apiFetch(`/api/it/courses/${currentContentCourseId}/exams`, { method: 'POST', body: JSON.stringify(finalBody), silentError: true });
         lastGeneratedQuestions = [];
         closeModal('examModal');
         showToast('Tạo bài kiểm tra thành công!');
         loadCourseContent();
         await loadDocumentLibrary();
     } catch (e) {
-        showToast(e.message || 'Lỗi tạo bài kiểm tra', 'error');
+        let msg = e.message || 'Lỗi tạo bài kiểm tra'; msg = msg.replace(/^Không thể tạo:\s*/i, ''); msg = msg.replace(/Tiêu đề quiz/i, 'Tiêu đề bài kiểm tra'); showToast(msg, 'error', { title: 'Không thể lưu', persistent: true });
     }
 }
 
@@ -4438,3 +4634,4 @@ function escapeJs(value) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

@@ -242,17 +242,21 @@ public partial class ITController : Controller
                 await _db.Database.ExecuteSqlRawAsync("DELETE FROM UserPoints WHERE UserID = {0}", id);
                 await _db.Database.ExecuteSqlRawAsync("DELETE FROM NewsletterSubscriptions WHERE UserID = {0}", id);
 
-                // 3. Xử lý các liên kết lịch sử (Chuyển sang NULL để bảo toàn tính toàn vẹn)
+                // 3. Xóa dữ liệu phản hồi & thông báo (bảng thiếu trước đó)
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM CourseFeedback WHERE UserID = {0}", id);
+                await _db.Database.ExecuteSqlRawAsync("DELETE FROM Notifications WHERE UserID = {0}", id);
+
+                // 4. Xử lý các liên kết lịch sử (Chuyển sang NULL để bảo toàn tính toàn vẹn)
                 await _db.Database.ExecuteSqlRawAsync("UPDATE Courses SET CreatedBy = NULL WHERE CreatedBy = {0}", id);
                 await _db.Database.ExecuteSqlRawAsync("UPDATE AuditLogs SET UserID = NULL WHERE UserID = {0}", id);
                 await _db.Database.ExecuteSqlRawAsync("UPDATE TrainingAssignments SET AssignedBy = NULL WHERE AssignedBy = {0}", id);
                 await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET EmployeeID = NULL WHERE EmployeeID = {0}", id);
                 await _db.Database.ExecuteSqlRawAsync("UPDATE IT_Movement_Logs SET ActionBy = NULL WHERE ActionBy = {0}", id);
 
-                // 4. Xóa chính User
+                // 5. Xóa chính User
                 await _db.Database.ExecuteSqlRawAsync("DELETE FROM Users WHERE UserID = {0}", id);
 
-                // 5. Ghi AuditLog hoạt động xóa (của người thực hiện xóa)
+                // 6. Ghi AuditLog hoạt động xóa (của người thực hiện xóa)
                 var currentUserIdStr = HttpContext.Session.GetString("UserID");
                 var currentUserId = string.IsNullOrEmpty(currentUserIdStr) ? 0 : int.Parse(currentUserIdStr);
                 _db.AuditLogs.Add(new AuditLog

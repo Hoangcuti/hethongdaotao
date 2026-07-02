@@ -26,7 +26,9 @@ public static class AdvancedAnalyticsSeeder
         
         // 1. Lấy dữ liệu cơ sở (Roles, Depts, Categories, JobTitles)
         var roleStudent = await context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Student");
-        var depts = await context.Departments.ToListAsync();
+        var depts = await context.Departments
+            .Where(d => d.DepartmentName != "Trung tâm Đào tạo Nội bộ" && d.DepartmentName != "test")
+            .ToListAsync();
         var jobTitles = await context.JobTitles.ToListAsync();
         var categories = await context.Categories.ToListAsync();
         

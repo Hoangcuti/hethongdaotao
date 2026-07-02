@@ -123,6 +123,11 @@ async function apiFetch(url, options = {}, timeoutMs = 15000) {
             }
             const error = new Error(errorMsg);
             if (errTitle) error.title = errTitle;
+            // Hiển thị toast ngay tại đây (nếu không silentError), và đánh dấu isHandled
+            if (!options.silentError) {
+                showToast(errorMsg, 'error', { title: errTitle || 'LỖI HỆ THỐNG' });
+            }
+            error.isHandled = true;
             throw error;
         }
 
@@ -136,7 +141,7 @@ async function apiFetch(url, options = {}, timeoutMs = 15000) {
         }
 
         const text = await res.text();
-        if (typeof text === 'string' && /<form[^>]*action=\"\/Auth\/Login|<title>\s*Login/i.test(text)) {
+        if (typeof text === 'string' && /<form[^>]*action="\/Auth\/Login|<title>\s*Login/i.test(text)) {
             throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
         }
         return text;
@@ -148,7 +153,10 @@ async function apiFetch(url, options = {}, timeoutMs = 15000) {
             throw timeoutErr;
         }
         console.error('API Error:', url, err.message);
-        showToast(err.message || 'Lỗi kết nối máy chủ', 'error', { title: err.title });
+        // Không hiện toast nếu silentError HOẶC đã hiển thị rồi (isHandled)
+        if (!options.silentError && !err.isHandled) {
+            showToast(err.message || 'Lỗi kết nối máy chủ', 'error', { title: err.title || 'LỖI HỆ THỐNG' });
+        }
         throw err;
     }
 }

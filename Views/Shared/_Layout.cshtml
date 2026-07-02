@@ -140,9 +140,25 @@
                     <div class="page-title" id="pageTitle">@ViewData["Title"]</div>
                     <div class="page-subtitle" id="pageSubtitle">@deptName</div>
                 </div>
-                <div class="topbar-actions">
+                <div class="topbar-actions" style="display:flex; align-items:center; gap:16px;">
+                    @if (role == "IT")
+                    {
+                        <div class="header-search-wrap hidden-mobile">
+                            <i class="ph ph-magnifying-glass" style="color:#94a3b8; font-size:16px;"></i>
+                            <input type="text" placeholder="Tìm người dùng, khóa học, bài thi..." />
+                        </div>
+                        <div class="hidden-mobile" style="font-size:12px; color:#64748b; font-weight:500; display:flex; align-items:center; gap:4px;">
+                            <i class="ph ph-arrows-clockwise"></i> Last Sync: <span id="headerSyncTime" style="color:#0f172a; font-weight:600;">--/--/---- --:--</span>
+                        </div>
+                    }
                     <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" aria-label="Open navigation" onclick="setSidebarOpen(true)"><i class="ph ph-list"></i></button>
-                    <button type="button" class="btn btn-secondary btn-icon mobile-only" aria-label="Notifications"><i class="ph ph-bell"></i></button>
+                    <button type="button" class="btn btn-secondary btn-icon" aria-label="Notifications" style="position:relative;">
+                        <i class="ph ph-bell"></i>
+                        @if (role == "IT")
+                        {
+                            <span id="headerNotifBadge" style="position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; font-size:9px; font-weight:700; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%; display:none; border:2px solid #fff;">0</span>
+                        }
+                    </button>
                     <div class="topbar-user">
                         <span class="topbar-avatar">@initials</span>
                         <div class="topbar-user-copy">

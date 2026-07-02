@@ -49,32 +49,121 @@
 <div class="content-area">
     <!-- Nav Pills Removed (now handled by sidebar) -->
     <!-- ====== PAGE: Overview ====== -->
-    <div id="overview" class="page-section fade-in">
-        <div class="stats-grid" id="itStatsGrid">
-            <div class="loading-overlay"><div class="spinner"></div></div>
-        </div>
-        <div class="grid-2">
-            <div class="card">
-                <div class="card-header"><div class="card-title">📊 Tiến độ học tập chung</div></div>
-                <div class="card-body">
-                    <div id="userChartEmpty" style="display:none;padding:40px;text-align:center;color:#94a3b8">Chưa có dữ liệu</div>
-                    <canvas id="userChart" height="180"></canvas>
+    <div id="overview" class="page-section fade-in" style="background:#f8fafc; padding:0; display:flex; flex-direction:column; gap:24px;">
+        
+        <!-- Welcome Card -->
+        <div id="admWelcomeCard" class="card" style="border:1px solid #e2e8f0; border-radius:12px; background:linear-gradient(to right, #ffffff, #f8fafc); padding:16px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h3 style="font-size:18px; font-weight:700; color:#0f172a; margin:0 0 4px 0;">Xin chào, @(User.FindFirst("FullName")?.Value ?? Context.Session.GetString("FullName") ?? "Admin") 👋</h3>
+                    <p style="font-size:13px; color:#64748b; margin:0;"><span id="admDateWelcome"></span>.</p>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><div class="card-title">🕒 Hoạt động gần đây</div></div>
-                <div class="card-body" style="padding:0; position:relative; min-height:200px" id="recentLogs">
-                    <div class="loading-overlay"><div class="spinner"></div></div>
+                <div style="font-size:13px; color:#334155; display:flex; gap:16px; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:6px;"><span style="color:#f59e0b; font-size:16px;">⏳</span> <span id="admWelcomeTasks">-- công việc cần xử lý</span></div>
+                    <div style="display:flex; align-items:center; gap:6px;"><span style="color:#3b82f6; font-size:16px;">🔔</span> <span id="admWelcomeNotifs">-- thông báo mới</span></div>
+                    <div style="display:flex; align-items:center; gap:6px;"><span style="color:#10b981; font-size:16px;">🟢</span> <span id="admWelcomeHealth">Hệ thống đang hoạt động bình thường</span></div>
                 </div>
             </div>
         </div>
-        <div class="card" style="margin-top: 20px;">
-            <div class="card-header"><div class="card-title">🏆 Bảng xếp hạng học tập theo phòng ban</div></div>
-            <div class="card-body" style="padding: 0; overflow-x: auto;">
-                <div id="deptLeaderboard" style="position:relative; min-height:150px">
-                    <div class="loading-overlay"><div class="spinner"></div></div>
+
+        <!-- Row 1: Core Metrics Grid (7 items) -->
+        <div class="adm-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px;">
+            <!-- Loading indicator initially -->
+            <div id="adm-metrics-loading" style="grid-column: 1 / -1; text-align: center; padding: 40px 0; color: #94a3b8;">
+                <div class="spinner" style="margin: 0 auto 12px auto;"></div> Đang tải thông số vận hành...
+            </div>
+        </div>
+
+        <!-- Row 2: Grid for Operations and Monitoring/Comms (2 Columns layout) -->
+        <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start;">
+            
+            <!-- Left Column: Operations -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Quick Actions Card -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#fff; overflow:hidden;">
+                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:12px 20px;">
+                        <h3 style="font-size:15px; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">⚡ Thao tác nhanh</h3>
+                    </div>
+                    <div class="card-body" style="padding:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap:12px;">
+                        <button class="btn btn-primary quick-action-btn" onclick="openCreateUserModal()" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; height:auto; justify-content:center; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; box-shadow:none;">
+                            <span style="font-size:22px;">👤</span>
+                            <span style="font-size:12px; font-weight:600;">Thêm người dùng</span>
+                        </button>
+                        <button class="btn btn-primary quick-action-btn" onclick="openCreateCourseModal()" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; height:auto; justify-content:center; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; box-shadow:none;">
+                            <span style="font-size:22px;">📘</span>
+                            <span style="font-size:12px; font-weight:600;">Tạo khóa học</span>
+                        </button>
+                        <button class="btn btn-primary quick-action-btn" onclick="navigate('exams')" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; height:auto; justify-content:center; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; box-shadow:none;">
+                            <span style="font-size:22px;">📝</span>
+                            <span style="font-size:12px; font-weight:600;">Tạo bài thi</span>
+                        </button>
+                        <button class="btn btn-primary quick-action-btn" onclick="navigate('documents')" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; height:auto; justify-content:center; background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; box-shadow:none;">
+                            <span style="font-size:22px;">📤</span>
+                            <span style="font-size:12px; font-weight:600;">Upload tài liệu</span>
+                        </button>
+                        <button class="btn btn-primary quick-action-btn" onclick="triggerQuickBackup()" style="display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px; border-radius:10px; height:auto; justify-content:center; background:linear-gradient(135deg, #eff6ff, #dbeafe); color:#1e40af; border:1px solid #bfdbfe; box-shadow:none;">
+                            <span style="font-size:22px;">💾</span>
+                            <span style="font-size:12px; font-weight:700;">Sao lưu Database</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pending Tasks -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#fff; overflow:hidden;">
+                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px;">
+                        <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">⚖️ Việc cần duyệt gấp</h3>
+                    </div>
+                    <div class="card-body" id="admPendingGrid" style="padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:16px; min-height:120px; position:relative;">
+                        <div class="loading-overlay"><div class="spinner"></div></div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Timeline -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#fff; overflow:hidden;">
+                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px;">
+                        <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">🕒 Hoạt động gần đây</h3>
+                    </div>
+                    <div class="card-body" id="admActivityTimeline" style="padding:20px; min-height:220px; position:relative;">
+                        <div class="loading-overlay"><div class="spinner"></div></div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Right Column: Monitoring & Comms -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- System Health Card -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#fff; overflow:hidden;">
+                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px;">
+                        <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">🖥️ Sức khỏe hệ thống</h3>
+                    </div>
+                    <div class="card-body" id="admSystemHealth" style="padding:20px; min-height:180px; position:relative;">
+                        <div class="loading-overlay"><div class="spinner"></div></div>
+                    </div>
+                </div>
+
+                <!-- Short System Log Card -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#0f172a; overflow:hidden;">
+                    <div class="card-header" style="background:#1e293b; border-bottom:1px solid #334155; padding:12px 20px; display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:14px; font-weight:700; color:#f8fafc; margin:0; display:flex; align-items:center; gap:8px;">💻 Terminal: Nhật ký hoạt động</h3>
+                        <span style="font-size:11px; color:#94a3b8; font-family:monospace;">live_logs</span>
+                    </div>
+                    <div class="card-body" id="admConsoleLogs" style="padding:16px; font-family: 'Consolas', 'Courier New', monospace; font-size:12px; color:#38bdf8; background:#0f172a; max-height:220px; overflow-y:auto; line-height:1.6; min-height:100px;">
+                        <div style="color:#64748b;">[system] Đang kết nối tới dòng sự kiện...</div>
+                    </div>
+                </div>
+
+                <!-- Notification Center Card -->
+                <div class="card" style="border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01); border-radius:16px; background:#fff; overflow:hidden;">
+                    <div class="card-header" style="background:#fff; border-bottom:1px solid #f1f5f9; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="font-size:16px; font-weight:700; color:#0f172a; margin:0; display:flex; align-items:center; gap:8px;">🔔 Trung tâm thông báo <span id="adm-notif-unread-count" class="badge badge-danger" style="display:none; font-size:11px;">0</span></h3>
+                        <button class="btn btn-sm btn-outline" onclick="markAllNotificationsRead()" style="font-size:12px; padding:4px 8px; border-color:#e2e8f0; color:#475569;">Đọc tất cả</button>
+                    </div>
+                    <div class="card-body" id="admNotificationsList" style="padding:10px 20px; max-height:280px; overflow-y:auto; min-height:120px; position:relative;">
+                        <div class="loading-overlay"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+            
         </div>
     </div>
 

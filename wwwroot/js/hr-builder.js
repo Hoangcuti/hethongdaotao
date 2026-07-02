@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // HR DASHBOARD - ADVANCED COURSE BUILDER & DOCUMENT LIBRARY JS
 // ============================================================
 
@@ -1608,7 +1608,7 @@ async function submitExam() {
         await loadDocumentLibrary();
         if (typeof loadExamsPageList === 'function') loadExamsPageList();
     } catch (e) {
-        showToast(e.message || 'Lỗi tạo Quiz', 'error');
+        let msg = e.message || 'Lỗi tạo Quiz'; msg = msg.replace(/^Không thể tạo:\s*/i, ''); msg = msg.replace(/Tiêu đề quiz/i, 'Tiêu đề bài kiểm tra'); showToast(msg, 'error', { title: 'Không thể lưu', persistent: true });
     }
 }
 
