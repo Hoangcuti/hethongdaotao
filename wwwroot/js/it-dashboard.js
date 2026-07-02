@@ -1,4 +1,4 @@
-﻿let departments = [];
+let departments = [];
 let userChart = null;
 let selectedUserIds = new Set();
 let availableRoles = [];
@@ -13,6 +13,9 @@ let currentModuleId = null;
 let currentUserPermissionKeys = new Set();
 let documentLibraryData = { courses: [], modules: [], lessons: [], exams: [] };
 let currentLibraryTab = 'modules';
+let currentQuestionTypeFilter = 'all';
+let currentPreviewModuleId = null;
+let currentPreviewCourseId = null;
 let lastGeneratedQuestions = [];
 let loadedExamsList = [];
 let allQuestionPoolData = [];
@@ -311,8 +314,10 @@ async function loadDocumentLibrary() {
             courses: data.courses || [],
             modules: data.modules || [],
             lessons: data.lessons || [],
-            exams: data.exams || []
+            exams: data.exams || [],
+            questions: data.questions || []
         };
+        allQuestionPoolData = documentLibraryData.questions || [];
         // Refresh department list if empty
         if (!loadedDepartmentsList || !loadedDepartmentsList.length) {
             const depts = await apiFetch('/api/it/departments');
@@ -365,13 +370,18 @@ function switchLibraryTab(tab) {
     const tabs = {
         modules: ['libraryTabModules', 'btn btn-primary'],
         lessons: ['libraryTabLessons', 'btn btn-primary'],
-        exams: ['libraryTabExams', 'btn btn-primary']
+        exams: ['libraryTabExams', 'btn btn-primary'],
+        questions: ['libraryTabQuestions', 'btn btn-primary']
     };
     Object.entries(tabs).forEach(([key, [id, activeClass]]) => {
         const el = document.getElementById(id);
         if (!el) return;
         el.className = key === tab ? activeClass : 'btn btn-secondary';
     });
+    const subTabsEl = document.getElementById('questionsSubTabs');
+    if (subTabsEl) {
+        subTabsEl.style.display = tab === 'questions' ? 'flex' : 'none';
+    }
     renderDocumentLibrary();
 }
 
@@ -379,13 +389,22 @@ function getFilteredLibraryRows() {
     const keyword = (document.getElementById('librarySearch')?.value || '').trim().toLowerCase();
     const deptId = document.getElementById('libraryDeptFilter')?.value || '';
     const courseId = document.getElementById('libraryCourseFilter')?.value || '';
-    const rows = documentLibraryData[currentLibraryTab] || [];
-    return rows.filter(row => {
-        const rowDept = String(row.targetDepartmentId || row.ownerDeptId || row.departmentId || '');
-        const matchesDept = !deptId || rowDept === deptId;
-        const matchesCourse = !courseId || String(row.courseId || row.ownerCourseId || '') === courseId;
+    let rows = documentLibraryData[currentLibraryTab] || [];
 
-        if (!matchesDept || !matchesCourse) return false;
+    if (currentLibraryTab === 'questions') {
+        if (typeof currentQuestionTypeFilter !== 'undefined' && currentQuestionTypeFilter !== 'all') {
+            rows = rows.filter(q => q.questionType === currentQuestionTypeFilter);
+        }
+    }
+
+    return rows.filter(row => {
+        if (currentLibraryTab !== 'questions') {
+            const rowDept = String(row.targetDepartmentId || row.ownerDeptId || row.departmentId || '');
+            const matchesDept = !deptId || rowDept === deptId;
+            const matchesCourse = !courseId || String(row.courseId || row.ownerCourseId || '') === courseId;
+            if (!matchesDept || !matchesCourse) return false;
+        }
+
         if (!keyword) return true;
 
         return [
@@ -394,7 +413,8 @@ function getFilteredLibraryRows() {
             row.courseTitle,
             row.courseCode,
             row.moduleTitle,
-            row.contentType
+            row.contentType,
+            row.questionText
         ].some(value => String(value || '').toLowerCase().includes(keyword));
     });
 }
@@ -452,12 +472,55 @@ function renderDocumentLibrary() {
                 <td>${attachments}</td>
                 <td>
                     <div style="display:flex;gap:8px;justify-content:flex-end">
+                        <button class="btn btn-info btn-sm" style="background:#3b82f6;color:white;border:none" onclick="previewLessonContent(${row.lessonId})">Xem</button>
                         <button class="btn btn-secondary btn-sm" onclick="openEditLessonModal(${row.lessonId})">Sửa</button>
                         <button class="btn btn-danger btn-sm" onclick="deleteLesson(${row.lessonId})">Xóa</button>
                     </div>
                 </td>
             </tr>`;
         }).join('') : '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:24px">Chưa có bài giảng nào.</td></tr>';
+        return;
+    }
+
+    if (currentLibraryTab === 'questions') {
+        head.innerHTML = '<tr><th style="width:50px">ID</th><th>Nội dung câu hỏi</th><th style="width:150px">Phân loại</th><th style="width:100px">Độ khó</th><th style="width:240px; text-align:right">Thao tác</th></tr>';
+        body.innerHTML = rows.length ? rows.map(row => {
+            let optionsText = '';
+            if (row.questionType === 'MultipleChoice' && row.options) {
+                optionsText = `<div style="margin-top:6px; font-size:12px; color:#475569">
+                    ${row.options.map(o => `<span style="margin-right:12px; padding:2px 6px; border-radius:4px; background:${o.isCorrect ? '#dcfce7; color:#166534' : '#f1f5f9; color:#475569'}">${o.isCorrect ? '✓ ' : ''}${libraryEscape(o.optionText)}</span>`).join('')}
+                </div>`;
+            } else if (row.questionType === 'FillInTheBlank' && row.options) {
+                const correctAnswers = row.options.filter(o => o.isCorrect).map(o => o.optionText);
+                optionsText = `<div style="margin-top:6px; font-size:12px; color:#4a044e">
+                    <strong>Từ khóa đúng:</strong> <span style="background:#fdf4ff; border:1px dashed #e879f9; padding:2px 6px; border-radius:4px">${libraryEscape(correctAnswers.join(' / '))}</span>
+                </div>`;
+            } else if (row.questionType === 'Essay') {
+                optionsText = `<div style="margin-top:6px; font-size:12px; color:#475569">
+                    <em>(Học viên sẽ nhập văn bản tự luận khi làm bài)</em>
+                </div>`;
+            }
+
+            const typeLabel = row.questionType === 'MultipleChoice' ? 'Trắc nghiệm' : row.questionType === 'Essay' ? 'Tự luận' : 'Điền từ';
+            const typeIcon = row.questionType === 'MultipleChoice' ? '☑️' : row.questionType === 'Essay' ? '✍️' : '✏️';
+
+            return `
+            <tr>
+                <td style="color:#64748b; font-family:monospace">${row.questionId}</td>
+                <td>
+                    <strong>${libraryEscape(row.questionText)}</strong>
+                    ${optionsText}
+                </td>
+                <td><span class="badge badge-info">${typeIcon} ${typeLabel}</span></td>
+                <td><span class="badge badge-secondary">${row.difficulty || 'Medium'}</span></td>
+                <td>
+                    <div style="display:flex; gap:8px; justify-content:flex-end">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditQuestionModal(${row.questionId})">Sửa</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${row.questionId})">Xóa</button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('') : '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:24px">Chưa có câu hỏi nào. Quý khách vui lòng nhấn "Tạo Câu Hỏi Mới" ở trên.</td></tr>';
         return;
     }
 
@@ -4631,6 +4694,338 @@ function openCreateExamModal() {
 
 function escapeJs(value) {
     return String(value ?? '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+}
+
+function switchQuestionSubTab(type) {
+    currentQuestionTypeFilter = type;
+    const subTabs = {
+        all: 'qSubTabAll',
+        MultipleChoice: 'qSubTabMC',
+        Essay: 'qSubTabEssay',
+        FillInTheBlank: 'qSubTabFITB'
+    };
+    Object.entries(subTabs).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = key === type ? 'btn btn-primary btn-sm question-sub-tab' : 'btn btn-secondary btn-sm question-sub-tab';
+    });
+    renderDocumentLibrary();
+}
+
+async function openEditQuestionModal(id) {
+    document.getElementById('questionEditModalTitle').textContent = 'Chỉnh sửa câu hỏi';
+    document.getElementById('editQuestionId').value = id;
+
+    const q = (allQuestionPoolData || []).find(x => x.questionId === id);
+    if (!q) return;
+
+    document.getElementById('editQuestionTypeInput').value = q.questionType || 'MultipleChoice';
+    document.getElementById('editQuestionTextInput').value = q.questionText || '';
+    document.getElementById('editQuestionDifficultyInput').value = q.difficulty || 'Medium';
+
+    const optionsContainer = document.getElementById('questionOptionsEditorRows');
+    optionsContainer.innerHTML = '';
+    
+    toggleQuestionOptionsEditor();
+
+    if (q.options && q.options.length) {
+        q.options.forEach(o => {
+            addQuestionOptionEditorRow(o.optionText, o.isCorrect);
+        });
+    } else {
+        addQuestionOptionEditorRow('', false);
+        addQuestionOptionEditorRow('', false);
+    }
+
+    openModal('questionPoolEditModal');
+}
+
+function toggleQuestionOptionsEditor() {
+    const type = document.getElementById('editQuestionTypeInput').value;
+    const area = document.getElementById('questionOptionsEditorArea');
+    const label = document.getElementById('questionOptionsLabel');
+    const container = document.getElementById('questionOptionsEditorRows');
+
+    if (type === 'Essay') {
+        area.style.display = 'none';
+        container.innerHTML = '';
+    } else if (type === 'MultipleChoice') {
+        area.style.display = 'block';
+        label.textContent = 'Các lựa chọn trắc nghiệm (Tích vào đáp án đúng)';
+        if (!container.children.length) {
+            addQuestionOptionEditorRow('', true);
+            addQuestionOptionEditorRow('', false);
+        }
+    } else if (type === 'FillInTheBlank') {
+        area.style.display = 'block';
+        label.textContent = 'Các từ khóa đúng được chấp nhận (Tích xanh để báo hiệu từ khóa)';
+        if (!container.children.length) {
+            addQuestionOptionEditorRow('', true);
+        }
+    }
+}
+
+function addQuestionOptionEditorRow(text = '', isCorrect = false) {
+    const container = document.getElementById('questionOptionsEditorRows');
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.gap = '8px';
+    div.style.alignItems = 'center';
+    
+    div.innerHTML = `
+        <input type="checkbox" class="opt-correct" ${isCorrect ? 'checked' : ''} style="width:20px; height:20px; cursor:pointer;" title="Đánh dấu là đáp án đúng">
+        <input type="text" class="form-input opt-text" value="${libraryEscape(text)}" style="flex:1;" placeholder="Nhập lựa chọn hoặc từ khóa...">
+        <button class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✖</button>
+    `;
+    container.appendChild(div);
+}
+
+async function submitQuestionPoolSave() {
+    const id = document.getElementById('editQuestionId').value;
+    const questionText = document.getElementById('editQuestionTextInput').value.trim();
+    const questionType = document.getElementById('editQuestionTypeInput').value;
+    const difficulty = document.getElementById('editQuestionDifficultyInput').value;
+
+    if (!questionText) return showToast('Nhập nội dung câu hỏi!', 'error');
+
+    const options = [];
+    if (questionType !== 'Essay') {
+        const rows = document.querySelectorAll('#questionOptionsEditorRows > div');
+        rows.forEach(row => {
+            const txt = row.querySelector('.opt-text').value.trim();
+            const correct = row.querySelector('.opt-correct').checked;
+            if (txt) {
+                options.push({ optionText: txt, isCorrect: correct });
+            }
+        });
+
+        if (options.length < 1) return showToast('Cần thêm ít nhất 1 đáp án/từ khóa!', 'error');
+        if (questionType === 'MultipleChoice' && !options.some(o => o.isCorrect)) {
+            return showToast('Trắc nghiệm cần có ít nhất 1 đáp án đúng!', 'error');
+        }
+    }
+
+    const payload = { questionText, questionType, difficulty, options };
+
+    try {
+        if (id) {
+            await apiFetch(`/api/it/questions-pool/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload)
+            });
+            showToast('Cập nhật câu hỏi thành công.');
+        } else {
+            await apiFetch(`/api/it/questions-pool`, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            showToast('Tạo câu hỏi thành công.');
+        }
+
+        closeModal('questionPoolEditModal');
+        await loadDocumentLibrary();
+        renderDocumentLibrary();
+    } catch (e) {
+        showToast('Lỗi lưu câu hỏi: ' + e.message, 'error');
+    }
+}
+
+async function deleteQuestion(questionId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa câu hỏi này khỏi hệ thống? Điều này sẽ ảnh hưởng tới các bài thi đang sử dụng câu hỏi này.')) return;
+    try {
+        await apiFetch(`/api/it/questions-pool/${questionId}`, { method: 'DELETE' });
+        showToast('Xóa câu hỏi thành công.');
+        await loadDocumentLibrary();
+        renderDocumentLibrary();
+    } catch (e) {
+        showToast('Lỗi xóa câu hỏi: ' + e.message, 'error');
+    }
+}
+
+async function previewModuleLessons(moduleId) {
+    try {
+        let m = (documentLibraryData.modules || []).find(x => x.moduleId === moduleId);
+        if (!m) return;
+
+        let lessons = (documentLibraryData.lessons || []).filter(l => l.moduleId === moduleId);
+        if (lessons.length === 0 && m.lessons) {
+            lessons = m.lessons;
+        }
+
+        const courseTitle = m.courseTitle || 'Tài liệu hệ thống';
+
+        currentPreviewModuleId = moduleId;
+        currentPreviewCourseId = m.courseId || null;
+
+        document.getElementById('previewLibraryTitle').textContent = `Xem tài liệu: ${courseTitle}`;
+
+        renderPreviewLibraryTree(moduleId);
+
+        if (lessons.length > 0) {
+            selectPreviewLesson(lessons[0].lessonId);
+        } else {
+            document.getElementById('previewLibraryContent').innerHTML = `
+                <div style="text-align: center; color: #64748b; margin-top: 100px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📝</div>
+                    <h4>Chương này chưa có bài học</h4>
+                    <p style="font-size: 13px;">Vui lòng thêm bài học vào chương này để xem nội dung.</p>
+                </div>
+            `;
+        }
+
+        openModal('previewLibraryModal');
+    } catch (e) {
+        showToast('Không tải được bài học: ' + e.message, 'error');
+    }
+}
+
+async function previewLessonContent(lessonId) {
+    try {
+        let lesson = (documentLibraryData.lessons || []).find(l => l.lessonId === lessonId);
+        if (!lesson) return;
+
+        currentPreviewModuleId = lesson.moduleId;
+        let module = (documentLibraryData.modules || []).find(m => m.moduleId === lesson.moduleId);
+        currentPreviewCourseId = module ? module.courseId : null;
+
+        const courseTitle = (module && module.courseTitle) ? module.courseTitle : 'Tài liệu hệ thống';
+        document.getElementById('previewLibraryTitle').textContent = `Xem tài liệu: ${courseTitle}`;
+
+        renderPreviewLibraryTree(lesson.moduleId, lessonId);
+        selectPreviewLesson(lessonId);
+        openModal('previewLibraryModal');
+    } catch (e) {
+        showToast('Lỗi xem bài học: ' + e.message, 'error');
+    }
+}
+
+function renderPreviewLibraryTree(activeModuleId, selectedLessonId = null) {
+    const sidebar = document.getElementById('previewLibrarySidebar');
+    if (!sidebar) return;
+
+    let targetModules = [];
+    if (currentPreviewCourseId) {
+        targetModules = (documentLibraryData.modules || []).filter(m => m.courseId === currentPreviewCourseId);
+    } else {
+        const activeModule = (documentLibraryData.modules || []).find(m => m.moduleId === activeModuleId);
+        if (activeModule) targetModules = [activeModule];
+    }
+
+    targetModules.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    sidebar.innerHTML = targetModules.map(m => {
+        let mLessons = (documentLibraryData.lessons || []).filter(l => l.moduleId === m.moduleId);
+        if (mLessons.length === 0 && m.lessons) {
+            mLessons = m.lessons;
+        }
+        mLessons.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+        const isCurrentModule = m.moduleId === activeModuleId;
+
+        const lessonsHtml = mLessons.map(l => {
+            const isSelected = l.lessonId === selectedLessonId;
+            const bg = isSelected ? '#3b82f6' : 'transparent';
+            const color = isSelected ? '#fff' : '#334155';
+            const hoverStyle = isSelected ? '' : 'onmouseover="this.style.background=\'#e2e8f0\'" onmouseout="this.style.background=\'transparent\'"';
+
+            return `
+                <div class="preview-tree-lesson" 
+                     onclick="selectPreviewLesson(${l.lessonId})" 
+                     style="padding: 6px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; transition: all 0.2s; background: ${bg}; color: ${color}; display: flex; align-items: center; gap: 6px; margin-bottom: 2px;"
+                     ${hoverStyle}>
+                    <span>📄</span>
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">${libraryEscape(l.title)}</span>
+                </div>
+            `;
+        }).join('');
+
+        return `
+            <div style="margin-bottom: 15px;">
+                <div style="font-weight: 700; font-size: 13.5px; color: ${isCurrentModule ? '#1e3a8a' : '#475569'}; display: flex; align-items: center; gap: 6px; padding: 4px 0 6px 0; border-bottom: 1px solid ${isCurrentModule ? '#bfdbfe' : '#f1f5f9'}; margin-bottom: 6px;">
+                    <span>📂</span>
+                    <span>${libraryEscape(m.title)}</span>
+                </div>
+                <div style="margin-left: 10px; display: flex; flex-direction: column; gap: 2px;">
+                    ${lessonsHtml || '<div style="font-size: 11px; color: #94a3b8; padding: 4px 10px;">(Chưa có bài học)</div>'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function selectPreviewLesson(lessonId) {
+    const items = document.querySelectorAll('.preview-tree-lesson');
+    items.forEach(el => {
+        const onClickStr = el.getAttribute('onclick') || '';
+        if (!onClickStr.includes(`(${lessonId})`)) {
+            el.style.background = 'transparent';
+            el.style.color = '#334155';
+            el.setAttribute('onmouseover', "this.style.background='#e2e8f0'");
+            el.setAttribute('onmouseout', "this.style.background='transparent'");
+        } else {
+            el.style.background = '#3b82f6';
+            el.style.color = '#fff';
+            el.removeAttribute('onmouseover');
+            el.removeAttribute('onmouseout');
+        }
+    });
+
+    let lesson = (documentLibraryData.lessons || []).find(l => l.lessonId === lessonId);
+    const container = document.getElementById('previewLibraryContent');
+    if (!container || !lesson) return;
+
+    let contentHtml = `
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+            <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;">${libraryEscape(lesson.title)}</h2>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; font-size: 12px;">
+                ${lesson.level ? `<span class="badge badge-info">Level ${lesson.level}</span>` : ''}
+                ${lesson.contentType ? `<span class="badge badge-purple">${libraryEscape(lesson.contentType)}</span>` : ''}
+            </div>
+        </div>
+    `;
+
+    if (lesson.videoUrl) {
+        contentHtml += `
+            <div style="margin-bottom: 25px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #475569; font-size: 14px;">🎥 Video bài học:</label>
+                <video src="${lesson.videoUrl}" controls style="width: 100%; max-height: 420px; border-radius: 10px; background: #000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);"></video>
+            </div>
+        `;
+    }
+
+    if (lesson.contentBody) {
+        contentHtml += `
+            <div style="margin-bottom: 25px; padding: 20px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);">
+                <label style="font-weight: 700; display: block; margin-bottom: 12px; color: #475569; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">📝 Nội dung bài học:</label>
+                <div class="lesson-content-rich" style="font-size: 14px; color: #334155; line-height: 1.7;">${lesson.contentBody}</div>
+            </div>
+        `;
+    } else if (!lesson.videoUrl) {
+        contentHtml += `
+            <div style="margin-bottom: 25px; padding: 25px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; color: #64748b;">
+                Bài học này chưa có nội dung chi tiết.
+            </div>
+        `;
+    }
+
+    const attachments = lesson.attachments || lesson.lessonAttachments || [];
+    if (attachments && attachments.length > 0) {
+        contentHtml += `
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: 700; display: block; margin-bottom: 10px; color: #475569; font-size: 14px;">📁 Tài liệu đính kèm:</label>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    ${attachments.map(a => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <span style="font-size: 13px; color: #334155; display: flex; align-items: center; gap: 8px;">📄 ${libraryEscape(a.fileName || a.FileName || 'Link tài liệu')}</span>
+                            <a href="${a.filePath || a.FilePath}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration: none; padding: 5px 10px; font-size: 12px; font-weight: 600;">Tải về</a>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    container.innerHTML = contentHtml;
 }
 
 document.addEventListener('DOMContentLoaded', init);

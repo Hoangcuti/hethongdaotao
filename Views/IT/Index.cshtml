@@ -403,8 +403,16 @@
                         <button id="libraryTabModules" class="btn btn-primary" onclick="switchLibraryTab('modules')">🧩 Kho Chương</button>
                         <button id="libraryTabLessons" class="btn btn-secondary" onclick="switchLibraryTab('lessons')">📝 Kho Bài Giảng</button>
                         <button id="libraryTabExams" class="btn btn-secondary" onclick="switchLibraryTab('exams')">❓ Kho Quiz</button>
+                        <button id="libraryTabQuestions" class="btn btn-secondary" onclick="switchLibraryTab('questions')">❓ Kho Câu Hỏi</button>
                     </div>
                     <button id="libraryCreateBtn" class="btn btn-primary" onclick="openLibraryCreateModal()">➕ Tạo mới</button>
+                </div>
+                <div id="questionsSubTabs" style="display:none; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0; flex-wrap:wrap; align-items:center">
+                    <span style="font-weight:600; color:#4a5568; margin-right:8px; display:inline-flex; align-items:center">Phân loại:</span>
+                    <button id="qSubTabAll" class="btn btn-primary btn-sm question-sub-tab" onclick="switchQuestionSubTab('all')">Tất cả</button>
+                    <button id="qSubTabMC" class="btn btn-secondary btn-sm question-sub-tab" onclick="switchQuestionSubTab('MultipleChoice')">☑️ Trắc nghiệm</button>
+                    <button id="qSubTabEssay" class="btn btn-secondary btn-sm question-sub-tab" onclick="switchQuestionSubTab('Essay')">✍️ Tự luận</button>
+                    <button id="qSubTabFITB" class="btn btn-secondary btn-sm question-sub-tab" onclick="switchQuestionSubTab('FillInTheBlank')">✏️ Điền từ</button>
                 </div>
             </div>
         </div>
@@ -1958,6 +1966,78 @@
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeModal('examParticipantsModal')">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<!-- Question Pool Edit Modal -->
+<div class="modal-backdrop" id="questionPoolEditModal">
+    <div class="modal-box" style="max-width:640px; width:90vw;">
+        <div class="modal-header">
+            <div class="modal-title" id="questionEditModalTitle">Tạo câu hỏi mới</div>
+            <button class="modal-close" onclick="closeModal('questionPoolEditModal')">✖</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editQuestionId">
+            <div class="form-group">
+                <label>Loại câu hỏi</label>
+                <select id="editQuestionTypeInput" class="form-input" onchange="toggleQuestionOptionsEditor()">
+                    <option value="MultipleChoice">☑️ Trắc nghiệm (Multiple Choice)</option>
+                    <option value="Essay">✍️ Tự luận (Essay)</option>
+                    <option value="FillInTheBlank">✏️ Điền từ (Fill in the blank)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nội dung câu hỏi</label>
+                <textarea id="editQuestionTextInput" class="form-input" rows="4" placeholder="Nhập câu hỏi..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Độ khó</label>
+                <select id="editQuestionDifficultyInput" class="form-input">
+                    <option value="Easy">Easy</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Hard">Hard</option>
+                </select>
+            </div>
+
+            <!-- Options Editor for MC & FITB -->
+            <div id="questionOptionsEditorArea">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-weight:700; margin:0;" id="questionOptionsLabel">Lựa chọn trả lời</label>
+                    <button class="btn btn-secondary btn-sm" onclick="addQuestionOptionEditorRow()">➕ Thêm đáp án</button>
+                </div>
+                <div id="questionOptionsEditorRows" style="display:flex; flex-direction:column; gap:8px;">
+                    <!-- Option rows will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('questionPoolEditModal')">Hủy</button>
+            <button class="btn btn-primary" onclick="submitQuestionPoolSave()">💾 Lưu câu hỏi</button>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Library Modal -->
+<div class="modal-backdrop" style="z-index:1310" id="previewLibraryModal">
+    <div class="modal-box" style="max-width: 1200px; width: 95vw; height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div class="modal-title" id="previewLibraryTitle">Xem trước tài liệu</div>
+            <button class="modal-close" onclick="closeModal('previewLibraryModal')">✖</button>
+        </div>
+        <div class="modal-body" style="flex: 1; display: flex; padding: 0; overflow: hidden; background: #fff;">
+            <!-- Left: Sidebar Tree -->
+            <div style="width: 340px; background: #f8fafc; border-right: 1px solid #e2e8f0; height: 100%; overflow-y: auto; padding: 15px;" id="previewLibrarySidebar">
+                <!-- Structure will be rendered here -->
+            </div>
+            <!-- Right: Content View -->
+            <div style="flex: 1; height: 100%; overflow-y: auto; padding: 25px;" id="previewLibraryContent">
+                <div style="text-align: center; color: #64748b; margin-top: 100px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">📖</div>
+                    <h4>Chọn một bài học ở menu bên trái</h4>
+                    <p style="font-size: 13px;">Nội dung bài học, video và tài liệu đính kèm sẽ hiển thị tại đây.</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>

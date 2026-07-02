@@ -385,7 +385,26 @@ public partial class ITController : Controller
             })
             .ToListAsync();
 
-        return Json(new { courses, modules, lessons, exams });
+        var questions = await _db.QuestionBanks
+            .AsNoTracking()
+            .Include(q => q.QuestionOptions)
+            .OrderByDescending(q => q.QuestionId)
+            .Select(q => new
+            {
+                questionId = q.QuestionId,
+                questionText = q.QuestionText,
+                questionType = q.QuestionType ?? "MultipleChoice",
+                difficulty = q.Difficulty ?? "Medium",
+                options = q.QuestionOptions.OrderBy(o => o.OptionId).Select(o => new
+                {
+                    optionId = o.OptionId,
+                    optionText = o.OptionText,
+                    isCorrect = o.IsCorrect ?? false
+                }).ToList()
+            })
+            .ToListAsync();
+
+        return Json(new { courses, modules, lessons, exams, questions });
     }
     [HttpPost("/api/it/courses/{courseId}/modules")]
     public async Task<IActionResult> CreateModule(int courseId, [FromBody] ItCreateModuleDto dto)
