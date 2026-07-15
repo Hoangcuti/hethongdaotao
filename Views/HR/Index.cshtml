@@ -137,7 +137,7 @@
             <div class="card">
                 <div class="card-header"><div class="card-title">💰 Ngân sách đào tạo</div></div>
                 <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:24px;height:200px;">
-                    <div style="width:150px;height:150px;position:relative;">
+                    <div style="width:180px;height:180px;position:relative;flex-shrink:0;">
                         <canvas id="budgetChart"></canvas>
                     </div>
                     <div id="budgetLegend" style="font-size:13px;"></div>
@@ -1724,7 +1724,7 @@ function renderCharts(s) {
     charts.b = new Chart(bCtx, {
         type:'doughnut',
         data:{ labels:['Đã chi','Còn lại'], datasets:[{ data:[spent, Math.max(0,total-spent)], backgroundColor:['#6366f1','#1e293b'], borderWidth:0 }] },
-        options:{ maintainAspectRatio:true, responsive:true, plugins:{ legend:{ display:false } }, cutout:'72%' }
+        options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{ display:false } }, cutout:'70%' }
     });
     document.getElementById('budgetLegend').innerHTML = `
         <div style="margin-bottom:8px;"><div style="font-size:11px;color:#94a3b8;">Đã chi</div><div style="font-weight:700;color:#6366f1">${fmtMoney(spent)}</div></div>
