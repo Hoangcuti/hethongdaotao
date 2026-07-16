@@ -8,9 +8,9 @@
     <style>
         /* ===== ENTERPRISE MANAGER DASHBOARD STYLES ===== */
         .mgr-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-        .mgr-kpi { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
-        .mgr-kpi:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
-        .mgr-kpi-accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 12px 0 0 12px; }
+        .mgr-kpi { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--card-radius-sm); padding: 20px; position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+        .mgr-kpi:hover { transform: translateY(-2px); box-shadow: var(--card-shadow); }
+        .mgr-kpi-accent { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: var(--card-radius-sm) 0 0 var(--card-radius-sm); }
         .mgr-kpi-icon { font-size: 28px; margin-bottom: 8px; }
         .mgr-kpi-value { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
         .mgr-kpi-label { font-size: 14px; color: var(--text-secondary); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
@@ -18,13 +18,13 @@
 
         /* Employee Cards Grid */
         .emp-search-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
-        .emp-search-input { flex: 1; min-width: 200px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 8px; padding: 12px 16px; font-size: 16px; outline: none; transition: border-color .2s; }
+        .emp-search-input { flex: 1; min-width: 200px; background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-primary); border-radius: 8px; padding: 12px 16px; font-size: 16px; outline: none; transition: border-color .2s; }
         .emp-search-input:focus { border-color: var(--primary); }
-        .emp-filter-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-primary); font-size: 15px; cursor: pointer; transition: all .2s; }
+        .emp-filter-btn { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); font-size: 15px; cursor: pointer; transition: all .2s; }
         .emp-filter-btn.active, .emp-filter-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
 
         .emp-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-        .emp-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; cursor: pointer; transition: all .2s; position: relative; }
+        .emp-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--card-radius-sm); padding: 20px; cursor: pointer; transition: all .2s; position: relative; }
         .emp-card:hover { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59,130,246,.1); transform: translateY(-1px); }
         .emp-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
         .emp-avatar { width: 56px; height: 56px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; flex-shrink: 0; }
@@ -33,7 +33,7 @@
         .emp-card-badge { position: absolute; top: 14px; right: 14px; }
         .emp-progress-wrap { margin-bottom: 12px; }
         .emp-progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
-        .emp-progress-bar { height: 6px; background: var(--border-color); border-radius: 3px; overflow: hidden; }
+        .emp-progress-bar { height: 6px; background: var(--card-border); border-radius: 3px; overflow: hidden; }
         .emp-progress-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
         .emp-card-actions { display: flex; gap: 8px; margin-top: 14px; }
         .emp-card-actions .btn { flex: 1; font-size: 12px; padding: 7px; justify-content: center; }
@@ -43,7 +43,7 @@
         .badge-status-inactive { background: rgba(148,163,184,.15); color: #94a3b8; border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
 
         /* Course cards */
-        .course-list-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 10px; margin-bottom: 10px; transition: border-color .2s; }
+        .course-list-item { display: flex; align-items: center; gap: 14px; padding: 14px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; margin-bottom: 10px; transition: border-color .2s; }
         .course-list-item:hover { border-color: var(--primary); }
         .course-icon-box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
         .course-list-info { flex: 1; }
@@ -51,7 +51,7 @@
         .course-list-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
 
         /* Assignment timeline */
-        .assign-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .assign-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--card-border); }
         .assign-item:last-child { border-bottom: none; }
         .assign-avatar-sm { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: #fff; }
         .assign-info { flex: 1; }
@@ -136,11 +136,14 @@
             </div>
             <div class="card">
                 <div class="card-header"><div class="card-title">💰 Ngân sách đào tạo</div></div>
-                <div class="card-body" style="display:flex;align-items:center;justify-content:center;gap:24px;height:200px;">
-                    <div style="width:180px;height:180px;position:relative;flex-shrink:0;">
-                        <canvas id="budgetChart"></canvas>
+                <div class="card-body" style="display:flex;flex-direction:column;justify-content:center;gap:16px;height:200px;padding:20px 24px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div id="budgetBarWrap" style="flex:1;background:#e2e8f0;border-radius:99px;height:14px;overflow:hidden;position:relative;">
+                            <div id="budgetBarFill" style="height:100%;border-radius:99px;transition:width .4s ease;min-width:0;"></div>
+                        </div>
+                        <span id="budgetBarPercent" style="font-size:13px;font-weight:700;white-space:nowrap;"></span>
                     </div>
-                    <div id="budgetLegend" style="font-size:13px;"></div>
+                    <div id="budgetLegend" style="font-size:13px;display:flex;gap:24px;"></div>
                 </div>
             </div>
         </div>
@@ -1718,18 +1721,18 @@ function renderCharts(s) {
         options:{ plugins:{ legend:{ position:'right', labels:{ color:'#94a3b8', font:{size:12} } } }, cutout:'65%' }
     });
 
-    const bCtx = document.getElementById('budgetChart').getContext('2d');
-    if(charts.b) charts.b.destroy();
     const spent = s.spentBudget || 0, total = s.totalBudget || 1;
-    charts.b = new Chart(bCtx, {
-        type:'doughnut',
-        data:{ labels:['Đã chi','Còn lại'], datasets:[{ data:[spent, Math.max(0,total-spent)], backgroundColor:['#6366f1','#1e293b'], borderWidth:0 }] },
-        options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{ display:false } }, cutout:'70%' }
-    });
+    const pct = Math.min(100, Math.max(0, s.budgetUsagePercent || 0));
+    const barColor = pct > 80 ? '#ef4444' : '#6366f1';
+    const fillEl = document.getElementById('budgetBarFill');
+    fillEl.style.width = Math.max(pct, 0) + '%';
+    fillEl.style.background = barColor;
+    document.getElementById('budgetBarPercent').textContent = pct + '% đã sử dụng';
+    document.getElementById('budgetBarPercent').style.color = barColor;
     document.getElementById('budgetLegend').innerHTML = `
-        <div style="margin-bottom:8px;"><div style="font-size:11px;color:#94a3b8;">Đã chi</div><div style="font-weight:700;color:#6366f1">${fmtMoney(spent)}</div></div>
+        <div><div style="font-size:11px;color:#94a3b8;">Đã chi</div><div style="font-weight:700;color:#6366f1">${fmtMoney(spent)}</div></div>
         <div><div style="font-size:11px;color:#94a3b8;">Tổng NS</div><div style="font-weight:700;">${fmtMoney(total)}</div></div>
-        <div style="margin-top:8px;"><div style="font-size:11px;color:#94a3b8;">Đã dùng</div><div style="font-weight:700;color:${s.budgetUsagePercent>80?'#ef4444':'#10b981'}">${s.budgetUsagePercent}%</div></div>`;
+        <div><div style="font-size:11px;color:#94a3b8;">Đã dùng</div><div style="font-weight:700;color:${pct>80?'#ef4444':'#10b981'}">${pct}%</div></div>`;
 }
 function fmtMoney(v) { if(v>=1e9) return (v/1e9).toFixed(1)+'B'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'; return v.toLocaleString(); }
 

@@ -53,15 +53,94 @@
             </div>
 
             <nav class="sidebar-nav" aria-label="Sidebar navigation">
-                <div class="nav-section-label">Tổng quan</div>
-                <ul>
-                    <li class="nav-item">
-                        <a class="nav-link active" onclick="location.href='@Url.Action("Index", role == "IT" ? "IT" : "HR")'">
-                            <span class="nav-icon"><i class="ph ph-house"></i></span>
-                            <span class="nav-text">Dashboard</span>
-                        </a>
-                    </li>
-                </ul>
+                @if (role != "Student")
+                {
+                    <div class="nav-section-label">Tổng quan</div>
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link active" onclick="location.href='@Url.Action("Index", role == "IT" ? "IT" : "HR")'">
+                                <span class="nav-icon"><i class="ph ph-house"></i></span>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+                }
+
+                @if (role == "Student")
+                {
+                    <div class="nav-section-label">Tổng quan</div>
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link active" data-page="dashboard" href="#">
+                                <span class="nav-icon"><i class="ph ph-house"></i></span>
+                                <span class="nav-text">Dashboard</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="nav-section-label">Học tập</div>
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="courses" href="#">
+                                <span class="nav-icon"><i class="ph ph-graduation-cap"></i></span>
+                                <span class="nav-text">Chương trình đào tạo</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="my-courses" href="#">
+                                <span class="nav-icon"><i class="ph ph-play-circle"></i></span>
+                                <span class="nav-text">Khóa đang học</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="learning-paths" href="#">
+                                <span class="nav-icon"><i class="ph ph-map-trifold"></i></span>
+                                <span class="nav-text">Lộ trình học</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="study-schedule" href="#">
+                                <span class="nav-icon"><i class="ph ph-calendar"></i></span>
+                                <span class="nav-text">Lịch học tập</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="nav-section-label">Kết quả & đánh giá</div>
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="exam-history" href="#">
+                                <span class="nav-icon"><i class="ph ph-file-text"></i></span>
+                                <span class="nav-text">Lịch sử thi</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="certificates" href="#">
+                                <span class="nav-icon"><i class="ph ph-certificate"></i></span>
+                                <span class="nav-text">Chứng chỉ</span>
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="nav-section-label">Tài khoản</div>
+                    <ul>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="notifications" href="#">
+                                <span class="nav-icon" style="position:relative;">
+                                    <i class="ph ph-bell"></i>
+                                    <span class="nav-badge" id="notifBadge" style="position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; font-size:9px; font-weight:700; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid #fff; display:none;">0</span>
+                                </span>
+                                <span class="nav-text">Thông báo</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-page="profile" href="#">
+                                <span class="nav-icon"><i class="ph ph-user"></i></span>
+                                <span class="nav-text">Hồ sơ cá nhân</span>
+                            </a>
+                        </li>
+                    </ul>
+                }
 
                 @if (role == "Manager" || role == "Trainer" || role == "Lecturer")
                 {
@@ -153,10 +232,16 @@
                             <i class="ph ph-arrows-clockwise"></i> Last Sync: <span id="headerSyncTime" style="color:#0f172a; font-weight:600;">--/--/---- --:--</span>
                         </div>
                     }
+                    @if (role == "Student")
+                    {
+                        <div class="hidden-mobile" style="font-size:12px; color:#64748b; font-weight:500; display:flex; align-items:center; gap:4px;">
+                            <i class="ph ph-calendar"></i> Hôm nay: <span id="todayLabel" style="color:#0f172a; font-weight:600;"></span>
+                        </div>
+                    }
                     <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" aria-label="Open navigation" onclick="setSidebarOpen(true)"><i class="ph ph-list"></i></button>
                     <button type="button" class="btn btn-secondary btn-icon" aria-label="Notifications" style="position:relative;">
                         <i class="ph ph-bell"></i>
-                        @if (role == "IT")
+                        @if (role == "IT" || role == "Student")
                         {
                             <span id="headerNotifBadge" style="position:absolute; top:-2px; right:-2px; background:#ef4444; color:#fff; font-size:9px; font-weight:700; width:16px; height:16px; display:flex; align-items:center; justify-content:center; border-radius:50%; display:none; border:2px solid #fff;">0</span>
                         }
