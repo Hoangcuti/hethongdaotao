@@ -9,33 +9,31 @@
     <title>Dashboard Học viên - LMS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/design-tokens.css" />
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <script src="~/js/app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        html, body { font-family: 'Manrope', sans-serif; }
-        .student-main { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-y: auto; overflow-x: hidden; position: relative; }
-        .hero-strip { background: linear-gradient(90deg, rgba(255,255,255,.9), rgba(214,240,255,.85)); border-bottom: 1px solid var(--border); padding: 18px 28px; display: flex; justify-content: space-between; gap: 16px; align-items: center; position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-        .hero-date { color: var(--text-secondary); font-size: 13px; font-weight: 600; text-align: right; }
+        html, body { font-family: var(--font-text); }
         .student-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
         .course-grid, .event-grid, .survey-grid, .notif-grid, .badge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-        .course-card, .event-card, .survey-card, .notif-card, .badge-card, .schedule-item, .rank-item, .info-item { border: 1px solid var(--border); border-radius: 16px; background: rgba(255,255,255,.9); padding: 16px; }
+        .course-card, .event-card, .survey-card, .notif-card, .badge-card, .schedule-item, .rank-item, .info-item { border: 1px solid var(--card-border); border-radius: var(--card-radius); background: var(--card-bg); padding: 16px; box-shadow: var(--card-shadow-soft); }
         .course-card h3, .event-card h3, .survey-card h3, .notif-card h3, .badge-card h3 { font-size: 16px; margin-bottom: 8px; }
         .meta-line { color: var(--text-secondary); font-size: 12px; line-height: 1.6; }
         .schedule-list, .rank-list, .info-list, .timeline-mini { display: grid; gap: 12px; }
         .schedule-item { display: grid; grid-template-columns: 110px 1fr; gap: 14px; }
         .schedule-day { font-size: 12px; font-weight: 800; color: var(--primary); text-transform: uppercase; }
-        .calendar-shell { border: 1px solid var(--border); border-radius: 20px; background: rgba(255,255,255,.96); overflow: hidden; }
-        .calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+        .calendar-shell { border: 1px solid var(--card-border); border-radius: 20px; background: var(--card-bg); overflow: hidden; }
+        .calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid var(--card-border); flex-wrap:wrap; }
         .calendar-nav, .calendar-views { display:flex; gap:12px; align-items:center; }
         .calendar-btn { border:none; border-radius:12px; background:#24364d; color:#fff; font:inherit; font-weight:700; padding:12px 16px; cursor:pointer; }
         .calendar-btn.secondary { background:#64748b; }
         .calendar-btn.ghost { background:#e2e8f0; color:#0f172a; }
         .calendar-title { font-size:24px; font-weight:800; color:#0f172a; }
         .calendar-grid { display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); }
-        .calendar-head { padding:12px 8px; text-align:center; font-size:13px; font-weight:800; color:#0f172a; border-bottom:1px solid var(--border); }
-        .calendar-cell { min-height:120px; border-right:1px solid rgba(15,23,42,.08); border-bottom:1px solid rgba(15,23,42,.08); padding:10px; position:relative; background:#fff; }
+        .calendar-head { padding:12px 8px; text-align:center; font-size:13px; font-weight:800; color:var(--text-heading); border-bottom:1px solid var(--card-border); }
+        .calendar-cell { min-height:120px; border-right:1px solid var(--card-border); border-bottom:1px solid var(--card-border); padding:10px; position:relative; background:var(--card-bg); }
         .calendar-cell:nth-child(7n) { border-right:none; }
         .calendar-cell.muted { background:#f8fafc; color:#94a3b8; }
         .calendar-cell.today { background:#fff9db; }
@@ -46,7 +44,7 @@
         .timeline-mini-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid rgba(15,23,42,.06); }
         .timeline-mini-item:last-child { border-bottom: none; }
         .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); margin-top: 6px; flex-shrink: 0; }
-        .field, .textarea { width: 100%; border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; font: inherit; background: #fff; }
+        .field, .textarea { width: 100%; border: 1px solid var(--card-border); border-radius: 12px; padding: 11px 13px; font: inherit; background: var(--card-bg); color: var(--text-body); }
         .textarea { min-height: 130px; resize: vertical; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         .wide { grid-column: 1 / -1; }
@@ -54,17 +52,15 @@
         .star { cursor: pointer; opacity: .35; }
         .star.active { opacity: 1; }
         .modal-card { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 40px); overflow: auto; }
-        .student-hero-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         @@media (max-width: 1100px) { .student-grid { grid-template-columns: 1fr; } }
-        @@media (max-width: 760px) { .form-grid, .schedule-item { grid-template-columns: 1fr; } .hero-strip { padding: 16px 18px; } .content-area { padding: 18px; } }
+        @@media (max-width: 760px) { .form-grid, .schedule-item { grid-template-columns: 1fr; } .content-area { padding: 18px; } }
     </style>
 </head>
 <body data-role="Student">
     <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="setSidebarOpen(false)"></div>
-    <div class="dashboard-shell">
+    <div class="dashboard-shell app-shell">
         <aside class="sidebar" id="appSidebar">
             <div class="sidebar-brand">
-                <div class="sidebar-brand-stack">
                 <a class="sidebar-logo" href="/Student/Index">
                     <div class="sidebar-logo-icon">LMS</div>
                     <div class="sidebar-logo-text">
@@ -72,84 +68,93 @@
                         <span class="brand-sub">Học viên</span>
                     </div>
                 </a>
-            <div class="sidebar-user sidebar-user-merged">
-                <div class="sidebar-avatar" id="sidebarAvatar">HV</div>
-                <div class="sidebar-user-info">
-                    <div class="user-name" id="sidebarName">Đang tải...</div>
-                    <div class="user-role" id="sidebarRole">Học viên</div>
-                </div>
-            </div>
+                <div class="sidebar-user sidebar-user-merged">
+                    <div class="sidebar-avatar" id="sidebarAvatar">HV</div>
+                    <div class="sidebar-user-info">
+                        <div class="user-name" id="sidebarName">Đang tải...</div>
+                        <div class="user-role" id="sidebarRole">Học viên</div>
+                    </div>
                 </div>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section-label">Tổng quan</div>
-                <div class="nav-item"><a class="nav-link active" href="#" data-page="dashboard"><span class="nav-icon">🏠</span><span>Dashboard</span></a></div>
+                <ul>
+                    <li class="nav-item"><a class="nav-link active" href="#" data-page="dashboard"><span class="nav-icon">🏠</span><span class="nav-text">Dashboard</span></a></li>
+                </ul>
                 <div class="nav-section-label">Học tập</div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="courses"><span class="nav-icon">📚</span><span>Chương trình đào tạo</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="my-courses"><span class="nav-icon">▶️</span><span>Khóa đang học</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="learning-paths"><span class="nav-icon">🗺️</span><span>Lộ trình học</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="study-schedule"><span class="nav-icon">🗓️</span><span>Lịch học tập</span></a></div>
+                <ul>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="courses"><span class="nav-icon">📚</span><span class="nav-text">Chương trình đào tạo</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="my-courses"><span class="nav-icon">▶️</span><span class="nav-text">Khóa đang học</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="learning-paths"><span class="nav-icon">🗺️</span><span class="nav-text">Lộ trình học</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="study-schedule"><span class="nav-icon">🗓️</span><span class="nav-text">Lịch học tập</span></a></li>
+                </ul>
                 <div class="nav-section-label">Kết quả & đánh giá</div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="exam-history"><span class="nav-icon">📝</span><span>Lịch sử thi</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="certificates"><span class="nav-icon">🏅</span><span>Chứng chỉ</span></a></div>
+                <ul>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="exam-history"><span class="nav-icon">📝</span><span class="nav-text">Lịch sử thi</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="certificates"><span class="nav-icon">🏅</span><span class="nav-text">Chứng chỉ</span></a></li>
+                </ul>
                 <div class="nav-section-label">Tài khoản</div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="notifications"><span class="nav-icon">🔔</span><span>Thông báo</span><span class="nav-badge" id="notifBadge">0</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="#" data-page="profile"><span class="nav-icon">👤</span><span>Hồ sơ cá nhân</span></a></div>
-                <div class="nav-item"><a class="nav-link" href="/Auth/Logout"><span class="nav-icon">🚪</span><span>Đăng xuất</span></a></div>
+                <ul>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="notifications"><span class="nav-icon">🔔</span><span class="nav-text">Thông báo</span><span class="nav-badge" id="notifBadge">0</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-page="profile"><span class="nav-icon">👤</span><span class="nav-text">Hồ sơ cá nhân</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Auth/Logout"><span class="nav-icon">🚪</span><span class="nav-text">Đăng xuất</span></a></li>
+                </ul>
             </nav>
         </aside>
-        <div class="student-main">
-            <header class="hero-strip">
-                <div>
+        <main class="main-content">
+            <header class="app-topbar">
+                <div class="topbar-title-group">
                     <div class="page-title" id="pageTitle">Dashboard</div>
                     <div class="page-subtitle" id="pageSubtitle">Tổng quan tiến độ học tập, lịch học và thông báo cá nhân.</div>
                 </div>
-                <div class="student-hero-actions">
+                <div class="topbar-actions" style="display:flex; align-items:center; gap:16px;">
+                    <div class="hidden-mobile" style="font-size:12px; color:#64748b; font-weight:500; display:flex; align-items:center; gap:4px;">
+                        Hôm nay: <span id="todayLabel" style="font-weight:600;"></span>
+                    </div>
                     <button type="button" class="btn btn-secondary btn-icon topbar-menu-trigger mobile-only" onclick="setSidebarOpen(true)">☰</button>
-                    <button type="button" class="btn btn-secondary btn-sm mobile-only" id="themeToggleBtn" onclick="toggleTheme()"><span class="btn-icon-mark">☀</span><span>Light</span></button>
-                    <div class="hero-date" id="todayLabel"></div>
+                    <button type="button" class="btn btn-secondary btn-icon" id="themeToggleBtn" onclick="toggleTheme()">☀</button>
                 </div>
             </header>
-            <main class="content-area">
+            <div class="content-area">
                 <section class="page-section" id="dashboard">
                     <div class="stats-grid" id="dashboardStats"></div>
                     <div class="student-grid">
-                        <div class="card"><div class="card-header"><div><div class="card-title">Khóa học gần đây</div><div class="card-subtitle">Các khóa đang học hoặc vừa ghi danh.</div></div></div><div class="card-body" id="recentCoursesWrap"></div></div>
-                        <div class="card"><div class="card-header"><div><div class="card-title">Thông báo mới</div><div class="card-subtitle">Những cập nhật gần nhất dành cho bạn.</div></div></div><div class="card-body" id="dashboardNotifications"></div></div>
+                        <div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Khóa học gần đây</div><div class="card-subtitle">Các khóa đang học hoặc vừa ghi danh.</div></div></div><div class="card-body" id="recentCoursesWrap"></div></div>
+                        <div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Thông báo mới</div><div class="card-subtitle">Những cập nhật gần nhất dành cho bạn.</div></div></div><div class="card-body" id="dashboardNotifications"></div></div>
                     </div>
                     <div class="student-grid" style="margin-top:18px">
-                        <div class="card"><div class="card-header"><div><div class="card-title">Lịch học sắp tới</div><div class="card-subtitle">Lịch offline và lịch thi.</div></div></div><div class="card-body" id="dashboardSchedule"></div></div>
-                        <div class="card"><div class="card-header"><div><div class="card-title">Hồ sơ nhanh</div><div class="card-subtitle">Thông tin cá nhân hiện tại.</div></div></div><div class="card-body info-list" id="profileQuickInfo"></div></div>
+                        <div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Lịch học sắp tới</div><div class="card-subtitle">Lịch offline và lịch thi.</div></div></div><div class="card-body" id="dashboardSchedule"></div></div>
+                        <div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Hồ sơ nhanh</div><div class="card-subtitle">Thông tin cá nhân hiện tại.</div></div></div><div class="card-body info-list" id="profileQuickInfo"></div></div>
                     </div>
                 </section>
-                <section class="page-section" id="courses" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Chương trình đào tạo</div><div class="card-subtitle">Danh sách khóa học có thể tham gia.</div></div></div><div class="card-body"><div class="course-grid" id="coursesList"></div></div></div></section>
-                <section class="page-section" id="my-courses" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Khóa đang học</div><div class="card-subtitle">Tiếp tục học và theo dõi tiến độ.</div></div></div><div class="card-body"><div class="course-grid" id="myCoursesList"></div></div></div></section>
-                <section class="page-section" id="learning-paths" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Lộ trình học</div><div class="card-subtitle">Theo dõi tiến độ theo từng lộ trình.</div></div></div><div class="card-body"><div class="course-grid" id="learningPathsList"></div></div></div></section>
-                <section class="page-section" id="offline-events" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Đào tạo offline</div><div class="card-subtitle">Đăng ký các buổi học trực tiếp.</div></div></div><div class="card-body"><div class="event-grid" id="offlineEventsList"></div></div></div></section>
+                <section class="page-section" id="courses" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Chương trình đào tạo</div><div class="card-subtitle">Danh sách khóa học có thể tham gia.</div></div></div><div class="card-body"><div class="course-grid" id="coursesList"></div></div></div></section>
+                <section class="page-section" id="my-courses" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Khóa đang học</div><div class="card-subtitle">Tiếp tục học và theo dõi tiến độ.</div></div></div><div class="card-body"><div class="course-grid" id="myCoursesList"></div></div></div></section>
+                <section class="page-section" id="learning-paths" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Lộ trình học</div><div class="card-subtitle">Theo dõi tiến độ theo từng lộ trình.</div></div></div><div class="card-body"><div class="course-grid" id="learningPathsList"></div></div></div></section>
+                <section class="page-section" id="offline-events" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Đào tạo offline</div><div class="card-subtitle">Đăng ký các buổi học trực tiếp.</div></div></div><div class="card-body"><div class="event-grid" id="offlineEventsList"></div></div></div></section>
                 <section class="page-section" id="study-schedule" style="display:none">
-                    <div class="card" style="margin-bottom:18px">
-                        <div class="card-header"><div><div class="card-title">📅 Lịch học Offline</div><div class="card-subtitle">Các buổi học trực tiếp tại trung tâm hoặc phòng họp.</div></div></div>
+                    <div class="card panel-card" style="margin-bottom:18px">
+                        <div class="card-header panel-card-header"><div><div class="card-title">📅 Lịch học Offline</div><div class="card-subtitle">Các buổi học trực tiếp tại trung tâm hoặc phòng họp.</div></div></div>
                         <div class="card-body">
                             <div class="schedule-list" id="offlineScheduleList"></div>
                         </div>
                     </div>
-                    <div class="card">
-                        <div class="card-header"><div><div class="card-title">📝 Lịch kiểm tra & Quiz</div><div class="card-subtitle">Thời gian diễn ra các bài đánh giá năng lực.</div></div></div>
+                    <div class="card panel-card">
+                        <div class="card-header panel-card-header"><div><div class="card-title">📝 Lịch kiểm tra & Quiz</div><div class="card-subtitle">Thời gian diễn ra các bài đánh giá năng lực.</div></div></div>
                         <div class="card-body">
                             <div class="schedule-list" id="quizScheduleList"></div>
                         </div>
                     </div>
                 </section>
-                <section class="page-section" id="exam-history" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Lịch sử thi</div><div class="card-subtitle">Kết quả các bài kiểm tra đã thực hiện.</div></div></div><div class="card-body"><div class="table-wrapper"><table class="lms-table"><thead><tr><th>Bài kiểm tra</th><th>Khóa học</th><th>Kết quả (%)</th><th>Trạng thái</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody id="examHistoryBody"></tbody></table></div></div></div></section>
-                <section class="page-section" id="certificates" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Chứng chỉ</div><div class="card-subtitle">Danh sách chứng chỉ đã nhận.</div></div></div><div class="card-body"><div class="course-grid" id="certificatesList"></div></div></div></section>
-                <section class="page-section" id="notifications" style="display:none"><div class="card"><div class="card-header"><div><div class="card-title">Thông báo</div><div class="card-subtitle">Danh sách thông báo gần đây.</div></div><button class="btn btn-secondary btn-sm" type="button" onclick="markAllNotifRead()">Đánh dấu đã đọc tất cả</button></div><div class="card-body"><div class="notif-grid" id="notificationsList"></div></div></div></section>
-                <section class="page-section" id="profile" style="display:none"><div class="student-grid"><div class="card"><div class="card-header"><div><div class="card-title">Hồ sơ cá nhân</div><div class="card-subtitle">Cập nhật họ tên và email.</div></div></div><div class="card-body"><div class="form-grid"><input class="field" id="profileFullName" placeholder="Họ và tên" /><input class="field" id="profileEmail" placeholder="Email" /><input class="field" id="profileUsername" placeholder="Tên đăng nhập" disabled /><input class="field" id="profileEmployeeCode" placeholder="Mã nhân viên" disabled /><input class="field" id="profileDepartment" placeholder="Phòng ban" disabled /><input class="field" id="profileJobTitle" placeholder="Chức danh" disabled /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="saveProfile()">Lưu hồ sơ</button></div></div></div><div class="card"><div class="card-header"><div><div class="card-title">Đổi mật khẩu</div><div class="card-subtitle">Mật khẩu mới tối thiểu 6 ký tự.</div></div></div><div class="card-body"><div class="form-grid"><input class="field wide" id="oldPassword" type="password" placeholder="Mật khẩu hiện tại" /><input class="field wide" id="newPassword" type="password" placeholder="Mật khẩu mới" /><input class="field wide" id="confirmPassword" type="password" placeholder="Nhập lại mật khẩu mới" /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="changePassword()">Đổi mật khẩu</button></div></div></div></div></section>
-            </main>
-        </div>
+                <section class="page-section" id="exam-history" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Lịch sử thi</div><div class="card-subtitle">Kết quả các bài kiểm tra đã thực hiện.</div></div></div><div class="card-body"><div class="table-wrapper"><table class="lms-table"><thead><tr><th>Bài kiểm tra</th><th>Khóa học</th><th>Kết quả (%)</th><th>Trạng thái</th><th>Thời gian</th><th>Hành động</th></tr></thead><tbody id="examHistoryBody"></tbody></table></div></div></div></section>
+                <section class="page-section" id="certificates" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Chứng chỉ</div><div class="card-subtitle">Danh sách chứng chỉ đã nhận.</div></div></div><div class="card-body"><div class="course-grid" id="certificatesList"></div></div></div></section>
+                <section class="page-section" id="notifications" style="display:none"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Thông báo</div><div class="card-subtitle">Danh sách thông báo gần đây.</div></div><button class="btn btn-secondary btn-sm" type="button" onclick="markAllNotifRead()">Đánh dấu đã đọc tất cả</button></div><div class="card-body"><div class="notif-grid" id="notificationsList"></div></div></div></section>
+                <section class="page-section" id="profile" style="display:none"><div class="student-grid"><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Hồ sơ cá nhân</div><div class="card-subtitle">Cập nhật họ tên và email.</div></div></div><div class="card-body"><div class="form-grid"><input class="field" id="profileFullName" placeholder="Họ và tên" /><input class="field" id="profileEmail" placeholder="Email" /><input class="field" id="profileUsername" placeholder="Tên đăng nhập" disabled /><input class="field" id="profileEmployeeCode" placeholder="Mã nhân viên" disabled /><input class="field" id="profileDepartment" placeholder="Phòng ban" disabled /><input class="field" id="profileJobTitle" placeholder="Chức danh" disabled /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="saveProfile()">Lưu hồ sơ</button></div></div></div><div class="card panel-card"><div class="card-header panel-card-header"><div><div class="card-title">Đổi mật khẩu</div><div class="card-subtitle">Mật khẩu mới tối thiểu 6 ký tự.</div></div></div><div class="card-body"><div class="form-grid"><input class="field wide" id="oldPassword" type="password" placeholder="Mật khẩu hiện tại" /><input class="field wide" id="newPassword" type="password" placeholder="Mật khẩu mới" /><input class="field wide" id="confirmPassword" type="password" placeholder="Nhập lại mật khẩu mới" /></div><div class="card-actions"><button class="btn btn-primary" type="button" onclick="changePassword()">Đổi mật khẩu</button></div></div></div></div></section>
+            </div>
+        </main>
     </div>
     <div class="modal-backdrop" id="courseDetailModal">
-        <div class="modal-card card">
-            <div class="card-header">
+        <div class="modal-card card panel-card">
+            <div class="card-header panel-card-header">
                 <div>
                     <div class="card-title" id="courseModalTitle">Chi tiết khóa học</div>
                     <div class="card-subtitle" id="courseModalSub">Thông tin tổng quan</div>
@@ -165,8 +170,8 @@
         </div>
     </div>
     <div class="modal-backdrop" id="reviewModal" style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);">
-        <div class="modal-card card" style="width: min(1100px, calc(100vw - 32px)); height: calc(100vh - 60px); display: flex; flex-direction: column;">
-            <div class="card-header" style="background: var(--brand); color: #fff; border-radius: 20px 20px 0 0;">
+        <div class="modal-card card panel-card" style="width: min(1100px, calc(100vw - 32px)); height: calc(100vh - 60px); display: flex; flex-direction: column;">
+            <div class="card-header panel-card-header" style="background: var(--color-primary); color: #fff; border-radius: 20px 20px 0 0;">
                 <div>
                     <div class="card-title" id="reviewTitle" style="color: #fff;">Xem lại bài thi</div>
                     <div class="card-subtitle" id="reviewSub" style="color: rgba(255,255,255,0.8)">Chi tiết các câu trả lời của bạn.</div>
@@ -267,7 +272,7 @@
                     const pageId = link.dataset.page;
                     
                     // Cuộn lên đầu trang khi chuyển mục
-                    const mainContainer = document.querySelector('.student-main');
+                    const mainContainer = document.querySelector('.main-content');
                     if (mainContainer) mainContainer.scrollTop = 0;
                     window.scrollTo({ top: 0, behavior: 'instant' });
 

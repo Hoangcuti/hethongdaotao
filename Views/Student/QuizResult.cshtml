@@ -9,21 +9,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@examTitle - Kết quả</title>
+    <link rel="stylesheet" href="~/css/design-tokens.css" />
     <link rel="stylesheet" href="~/css/dashboard.css" />
     <script src="~/js/app.js"></script>
     <style>
         :root {
             --brand: var(--color-primary);
-            --brand-soft: var(--color-primary-soft);
-            --bg: var(--color-page);
-            --card-bg: var(--color-surface);
-            --text-main: var(--color-text);
-            --text-muted: var(--color-text-secondary);
+            --brand-soft: var(--color-primary-bg-hover);
+            --bg: var(--bg-page);
+            --card-bg: var(--card-bg);
+            --text-main: var(--text-body);
+            --text-muted: var(--text-muted);
             --success: var(--color-success);
             --error: var(--color-danger);
             --warning: var(--color-warning);
-            --glass-border: var(--border-color);
-            --glass-shadow: var(--shadow-md);
+            --glass-border: var(--card-border);
+            --glass-shadow: var(--card-shadow);
         }
 
         * {
